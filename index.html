@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Oráculo Dedutivo</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧙🏼‍♂️</text></svg>">
 <style>
   :root{
     /* ---- paleta (arquivo de investigação) ---- */
@@ -443,6 +444,116 @@
   @media (prefers-reduced-motion:reduce){
     *{ animation-duration:.001s !important; transition-duration:.001s !important; }
   }
+  /* Container de Balões (Chips) */
+.chip-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip-editavel {
+  background: rgba(0,0,0,0.06);
+  color: var(--text);
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.chip-editavel button {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.chip-editavel button:hover { color: red; }
+
+/* Linha de Sinônimos */
+.sinonimo-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.05);
+  font-size: 0.85rem;
+}
+.sinonimo-row span {
+  flex: 1;
+}
+.sinonimo-row .arrow {
+  color: var(--primary);
+  margin: 0 10px;
+  font-weight: bold;
+}
+/* Lista de Exportação */
+.export-list {
+  max-height: 200px;
+  overflow-y: auto;
+  background: rgba(0,0,0,0.02);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 6px;
+  padding: 8px;
+}
+.cat-export-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+.cat-export-item:last-child {
+  border-bottom: none;
+}
+.cat-export-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+.cat-export-item span {
+  font-size: 0.9rem;
+  color: var(--text);
+}
+/* Estilos para as Sanfonas de Configuração (Accordions) */
+.config-group {
+  background: var(--bg);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.config-group summary {
+  padding: 14px 15px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--primary);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  list-style: none; /* Remove a setinha padrão do navegador */
+  background: rgba(0,0,0,0.02);
+  user-select: none;
+}
+.config-group summary::-webkit-details-marker {
+  display: none;
+}
+.config-group[open] summary {
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  background: rgba(0,0,0,0.04);
+}
+.config-group summary .seta {
+  transition: transform 0.3s ease;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.config-group[open] summary .seta {
+  transform: rotate(180deg);
+}
 </style>
 </head>
 <body>
@@ -538,7 +649,95 @@
         <button id="btnLimparTudo" class="btn btn-danger btn-small">Apagar todos os registros</button>
       </div>
     </section>
+    <!-- ===== TAB: CONFIGURAÇÕES ===== -->
+    <!-- ===== TAB: CONFIGURAÇÕES ===== -->
+    <section id="tab-config" class="tab-panel">
+      
+      <p style="font-size:0.85rem; color:var(--text-muted); text-align:center; margin-bottom:15px;">
+        Toque nos painéis abaixo para expandir e ajustar o motor do Oráculo.
+      </p>
 
+      <!-- 1. Pesos Base e Booleanos -->
+      <details class="config-group">
+        <summary><span>🎛️ Sensibilidade Base (Bayes & Booleanos)</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <label class="field-label">PESO DA PALAVRA SOLTA (<span id="valPesoPalavra">1</span>)</label>
+          <input type="range" id="rangePalavra" min="0.1" max="5" step="0.1" value="1" style="width:100%; margin-bottom:15px;">
+          
+          <label class="field-label">PESO DO BIGRAMA (<span id="valPesoBigrama">2.2</span>)</label>
+          <input type="range" id="rangeBigrama" min="0.1" max="10" step="0.1" value="2.2" style="width:100%; margin-bottom:20px;">
+
+          <label class="field-label">MULTIPLICADOR DE OBRIGAÇÃO [+] (<span id="valMultiplicadorMais">5</span>x)</label>
+          <input type="range" id="rangeMultiplicadorMais" min="2" max="20" step="1" value="5" style="width:100%; margin-bottom:15px;">
+
+          <label class="field-label">PUNIÇÃO DE VETO [-] (<span id="valPunicaoMenos">-10</span> pts)</label>
+          <input type="range" id="rangePunicaoMenos" min="-50" max="-2" step="1" value="-10" style="width:100%;">
+        </div>
+      </details>
+
+      <!-- 2. Motores Avançados (NOVO) -->
+      <details class="config-group">
+        <summary><span>🧠 Motores Avançados (Forense)</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <label class="field-label">FORÇA DO ÍNDICE JACCARD (<span id="valPesoJaccard">2</span>)</label>
+          <input type="range" id="rangeJaccard" min="0" max="10" step="0.5" value="2" style="width:100%; margin-bottom:5px;">
+          <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:20px;">
+            Punição para "Overfitting" (causas com texto longo onde você acertou poucas palavras). Deixe em 0 para desativar.
+          </p>
+
+          <label class="field-label" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+            <input type="checkbox" id="checkIDF" style="width:18px; height:18px; accent-color:var(--primary);">
+            ATIVAR BM25 / IDF (Raridade)
+          </label>
+          <p style="font-size:0.75rem; color:var(--text-muted); margin-top:5px; margin-bottom:0;">
+            Aumenta massivamente o peso de palavras raras exclusivas e diminui o peso de palavras genéricas.
+          </p>
+        </div>
+      </details>
+
+      <!-- 3. Stopwords -->
+      <details class="config-group">
+        <summary><span>🛑 Palavras Ignoradas (Stopwords)</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <input type="text" id="inputStopword" placeholder="Ex: quando" style="flex:1;">
+            <button id="btnAddStopword" class="btn btn-small">+</button>
+          </div>
+          <div id="areaStopwords" class="chip-container"></div>
+        </div>
+      </details>
+
+      <!-- 4. Sinônimos -->
+      <details class="config-group">
+        <summary><span>🔗 Dicionário de Sinônimos</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+            <input type="text" id="inputSinonimoDe" placeholder="Se digitar (Ex: bateria arriada)">
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="inputSinonimoPara" placeholder="Mudar para (Ex: falha_partida)" style="flex:1;">
+              <button id="btnAddSinonimo" class="btn btn-small">+</button>
+            </div>
+          </div>
+          <div id="areaSinonimos" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+      </details>
+
+      <!-- 5. Gerenciamento de Arquivos -->
+      <details class="config-group">
+        <summary><span>💾 Exportar / Importar Regras</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <div style="display:flex; gap:8px; margin-bottom: 12px;">
+            <button id="btnExportarConfig" class="btn btn-small" style="flex:1;">Exportar Ajustes</button>
+            <button id="btnImportarConfigTrigger" class="btn btn-small" style="flex:1;">Importar Ajustes</button>
+            <input type="file" id="inputImportarConfig" accept="application/json" style="display:none;">
+          </div>
+          <div class="danger-zone" style="margin-top: 0; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.05);">
+            <button id="btnRestaurarConfig" class="btn btn-ghost btn-small" style="width:100%;">Restaurar Ajustes de Fábrica</button>
+          </div>
+        </div>
+      </details>
+
+    </section>
   </main>
 
   <nav class="bottom-nav">
@@ -554,6 +753,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l1.6-3.2A1 1 0 0 1 5.5 3.2h13a1 1 0 0 1 .9.6L21 7"/><rect x="3" y="7" width="18" height="13" rx="1.2"/><line x1="9" y1="12.5" x2="15" y2="12.5"/></svg>
       <span>Arquivo</span>
     </button>
+    <button class="nav-btn" data-tab="config">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Ajustes</span>
+    </button>
   </nav>
 </div>
 
@@ -568,7 +771,28 @@
     </div>
   </div>
 </div>
+<!-- ===== MODAL DE EXPORTAÇÃO SELETIVA ===== -->
+<div id="modalExportOverlay" class="modal-overlay hidden">
+  <div class="modal">
+    <h3 style="margin-top:0; margin-bottom:15px; font-size:1.1rem; color:var(--primary);">Exportar Cartucho</h3>
+    
+    <label class="field-label" for="inputNomeExport">NOME DO ARQUIVO <span class="opt">(opcional)</span></label>
+    <input type="text" id="inputNomeExport" placeholder="Ex: estudos de psicologia" style="margin-bottom:15px; width:100%; box-sizing:border-box;">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <label class="field-label" style="margin:0;">CATEGORIAS PARA EXPORTAR</label>
+      <button id="btnToggleCategorias" class="btn-link" style="font-size:0.8rem;">Desmarcar Todas</button>
+    </div>
+    
+    <!-- A lista de checkboxes será injetada aqui -->
+    <div id="listaCategoriasExport" class="export-list"></div>
 
+    <div class="modal-actions" style="margin-top: 20px;">
+      <button id="btnCancelExport" class="btn btn-ghost">Cancelar</button>
+      <button id="btnConfirmExport" class="btn btn-stamp">Salvar Arquivo</button>
+    </div>
+  </div>
+</div>
 <script>
 (function(){
 'use strict';
@@ -637,7 +861,248 @@ function clearAllCasosDB(){
     req.onerror = function(e){ reject(e.target.error); };
   });
 }
+/* =========================================================
+   Gerenciador de Configurações (Ajustes do Oráculo)
+   ========================================================= */
+var configPadrao = {
+  pesoPalavra: 1.0,
+  pesoBigrama: 2.2,
+  multiplicadorMais: 5.0, // <-- NOVO aumenta peso ao usar +
+  punicaoMenos: -10.0,    // <-- NOVO aumenta a puniçao ao usar -
+  pesoJaccard: 2.0, // <-- NOVO CONTROLE JACCARD
+  ativarIDF: true,
+  stopwords: ['a','o','as','os','um','uma','de','do','da','em','no','na','por','pra','para','com','e','ou','que','é','foi','ser','esta','este','isso','como','mais','muito','já','só','até','entre','sobre','depois','antes','quando','onde','porque','mas','então','assim','cada','todo','seu','sua','meu','minha','eu','ele','ela','nós','você','lhe','me','se','está','tem','há'],
+  sinonimos: [
+    // Exemplo inicial: mapeia uma frase para um termo de peso único
+    { de: "nao liga", para: "falha_partida" }
+  ]
+};
 
+var config = JSON.parse(localStorage.getItem('OraculoConfig')) || JSON.parse(JSON.stringify(configPadrao));
+
+function salvarConfig() {
+  localStorage.setItem('OraculoConfig', JSON.stringify(config));
+}
+// Prevenção de quebra para configs antigas salvas
+if(config.pesoJaccard === undefined) config.pesoJaccard = configPadrao.pesoJaccard;
+if(config.ativarIDF === undefined) config.ativarIDF = configPadrao.ativarIDF;
+// === UI: Controle de Pesos ===
+$('rangePalavra').value = config.pesoPalavra;
+$('valPesoPalavra').textContent = config.pesoPalavra;
+$('rangePalavra').addEventListener('input', function(e){
+  config.pesoPalavra = parseFloat(e.target.value);
+  $('valPesoPalavra').textContent = config.pesoPalavra;
+  salvarConfig();
+});
+
+$('rangeBigrama').value = config.pesoBigrama;
+$('valPesoBigrama').textContent = config.pesoBigrama;
+$('rangeBigrama').addEventListener('input', function(e){
+  config.pesoBigrama = parseFloat(e.target.value);
+  $('valPesoBigrama').textContent = config.pesoBigrama;
+  salvarConfig();
+});
+// === UI: Controles Booleanos ===
+// Garante que o valor existe caso esteja carregando um config antigo salvo no localStorage
+if(config.multiplicadorMais === undefined) config.multiplicadorMais = configPadrao.multiplicadorMais;
+if(config.punicaoMenos === undefined) config.punicaoMenos = configPadrao.punicaoMenos;
+
+$('rangeMultiplicadorMais').value = config.multiplicadorMais;
+$('valMultiplicadorMais').textContent = config.multiplicadorMais;
+$('rangeMultiplicadorMais').addEventListener('input', function(e){
+  config.multiplicadorMais = parseFloat(e.target.value);
+  $('valMultiplicadorMais').textContent = config.multiplicadorMais;
+  salvarConfig();
+});
+
+$('rangePunicaoMenos').value = config.punicaoMenos;
+$('valPunicaoMenos').textContent = config.punicaoMenos;
+$('rangePunicaoMenos').addEventListener('input', function(e){
+  config.punicaoMenos = parseFloat(e.target.value);
+  $('valPunicaoMenos').textContent = config.punicaoMenos;
+  salvarConfig();
+});
+// === UI: Controles Forenses (Jaccard e IDF) ===
+$('rangeJaccard').value = config.pesoJaccard;
+$('valPesoJaccard').textContent = config.pesoJaccard;
+$('rangeJaccard').addEventListener('input', function(e){
+  config.pesoJaccard = parseFloat(e.target.value);
+  $('valPesoJaccard').textContent = config.pesoJaccard;
+  salvarConfig();
+});
+
+$('checkIDF').checked = config.ativarIDF;
+$('checkIDF').addEventListener('change', function(e){
+  config.ativarIDF = e.target.checked;
+  salvarConfig();
+});
+// === UI: Stopwords (Balõezinhos) ===
+function renderStopwords() {
+  var area = $('areaStopwords');
+  area.innerHTML = '';
+  config.stopwords.forEach(function(sw, index) {
+    var div = document.createElement('div');
+    div.className = 'chip-editavel';
+    div.innerHTML = escapeHtml(sw) + ' <button data-idx="'+index+'">&times;</button>';
+    area.appendChild(div);
+  });
+  area.querySelectorAll('button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      config.stopwords.splice(btn.getAttribute('data-idx'), 1);
+      salvarConfig();
+      renderStopwords();
+    });
+  });
+}
+
+function addStopword() {
+  var val = $('inputStopword').value.trim().toLowerCase();
+  if(val && !config.stopwords.includes(val)) {
+    config.stopwords.push(val);
+    salvarConfig();
+    renderStopwords();
+    $('inputStopword').value = '';
+  }
+}
+$('btnAddStopword').addEventListener('click', addStopword);
+$('inputStopword').addEventListener('keypress', function(e){ if(e.key === 'Enter') addStopword(); });
+
+// === UI: Sinônimos ===
+function renderSinonimos() {
+  var area = $('areaSinonimos');
+  area.innerHTML = '';
+  config.sinonimos.forEach(function(sin, index) {
+    var div = document.createElement('div');
+    div.className = 'sinonimo-row';
+    div.innerHTML = '<span>' + escapeHtml(sin.de) + '</span>' +
+                    '<span class="arrow">➔</span>' +
+                    '<span>' + escapeHtml(sin.para) + '</span>' +
+                    '<button class="icon-btn danger" data-idx="'+index+'" style="margin-left:10px;color: black;background: #df8580;">&times;</button>';
+    area.appendChild(div);
+  });
+  area.querySelectorAll('button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      config.sinonimos.splice(btn.getAttribute('data-idx'), 1);
+      salvarConfig();
+      renderSinonimos();
+    });
+  });
+}
+
+$('btnAddSinonimo').addEventListener('click', function(){
+  var de = $('inputSinonimoDe').value.trim().toLowerCase();
+  var para = $('inputSinonimoPara').value.trim().toLowerCase();
+  if(de && para) {
+    config.sinonimos.push({ de: de, para: para });
+    salvarConfig();
+    renderSinonimos();
+    $('inputSinonimoDe').value = '';
+    $('inputSinonimoPara').value = '';
+    $('inputSinonimoDe').focus();
+  } else {
+    toast('Preencha os dois campos do sinônimo.');
+  }
+});
+
+$('btnRestaurarConfig').addEventListener('click', function(){
+  confirmar('Restaurar as configurações de fábrica? Seus casos salvos não serão afetados.').then(function(ok){
+    if(ok) {
+      config = JSON.parse(JSON.stringify(configPadrao));
+      salvarConfig();
+      $('rangePalavra').value = config.pesoPalavra;
+      $('valPesoPalavra').textContent = config.pesoPalavra;
+      $('rangeBigrama').value = config.pesoBigrama;
+      $('valPesoBigrama').textContent = config.pesoBigrama;
+      $('rangePunicaoMenos').value = config.punicaoMenos;
+      $('valPunicaoMenos').textContent = config.punicaoMenos;
+      $('rangeMultiplicadorMais').value = config.multiplicadorMais;
+      $('valMultiplicadorMais').textContent = config.multiplicadorMais;
+      $('rangeJaccard').value = config.pesoJaccard;
+      $('valPesoJaccard').textContent = config.pesoJaccard;
+      // Aqui está o IDF (ele atualiza a caixinha de marcar na tela)
+      $('checkIDF').checked = config.ativarIDF;
+      renderStopwords();
+      renderSinonimos();
+      toast('Ajustes restaurados.');
+    }
+  });
+});
+// === Exportar Configurações ===
+$('btnExportarConfig').addEventListener('click', function(){
+  // Clona o objeto de configuração atual
+  var exportData = {
+    tipo: 'OraculoConfig', // Assinatura para garantir que não importemos casos aqui
+    dados: config
+  };
+  
+  var blob = new Blob([JSON.stringify(exportData, null, 2)], { type:'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  var data = new Date();
+  var stamp = data.getFullYear() + String(data.getMonth()+1).padStart(2,'0') + String(data.getDate()).padStart(2,'0');
+  
+  a.href = url;
+  a.download = 'oraculo-regras-' + stamp + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Regras exportadas com sucesso.');
+});
+
+// === Importar Configurações ===
+$('btnImportarConfigTrigger').addEventListener('click', function(){ 
+  $('inputImportarConfig').click(); 
+});
+
+$('inputImportarConfig').addEventListener('change', function(e){
+  var file = e.target.files[0];
+  if (!file) return;
+  
+  var reader = new FileReader();
+  reader.onload = function(){
+    try {
+      var json = JSON.parse(reader.result);
+      
+      // Validação de segurança: garante que o arquivo é de configurações
+      if (!json || json.tipo !== 'OraculoConfig' || !json.dados) {
+        throw new Error('Arquivo não reconhecido como regras do Oráculo.');
+      }
+      
+      var novosDados = json.dados;
+      
+      // Validação básica da estrutura
+      if (typeof novosDados.pesoPalavra !== 'number' || !Array.isArray(novosDados.stopwords) || !Array.isArray(novosDados.sinonimos)) {
+         throw new Error('A estrutura do arquivo está corrompida.');
+      }
+
+      confirmar('Substituir suas regras atuais pelas regras deste arquivo?').then(function(ok){
+        if(!ok) return;
+        
+        config = novosDados;
+        salvarConfig();
+        
+        // Atualiza a Interface
+        $('rangePalavra').value = config.pesoPalavra;
+        $('valPesoPalavra').textContent = config.pesoPalavra;
+        $('rangeBigrama').value = config.pesoBigrama;
+        $('valPesoBigrama').textContent = config.pesoBigrama;
+        renderStopwords();
+        renderSinonimos();
+        
+        toast('Novas regras aplicadas com sucesso!');
+      });
+      
+    } catch(err) {
+      toast('Falha ao importar: ' + err.message);
+    }
+    $('inputImportarConfig').value = ''; // Reseta o input
+  };
+  reader.readAsText(file);
+});
+// Inicializar UI de configurações
+renderStopwords();
+renderSinonimos();
 /* =========================================================
    Processamento de texto — normalização, stopwords, bigramas
    ========================================================= */
@@ -652,36 +1117,129 @@ var STOPWORDS = new Set([
   'esses','essas','está','estão','estava','estavam','ser','sendo','tem','têm','tinha','há','ter'
 ]);
 
+// Pesos ajustáveis: quanto uma palavra solta vs. um bigrama (par de palavras)
+// pesa no cálculo. Suba PESO_BIGRAMA para priorizar frases exatas; abaixe para
+// depender mais de palavras isoladas.
+
+/* =========================================================
+   Processamento de texto — normalização, stopwords, bigramas
+   ========================================================= */
 function normalizar(texto){
   return String(texto || '')
     .toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-    .replace(/[^a-z0-9\s]/g,' ')
+    .replace(/[^a-z0-9\s_]/g,' ') // Nota: adicionei o underscore "_" aqui para preservar sinônimos como "falha_partida"
     .replace(/\s+/g,' ')
     .trim();
 }
 
-// Pesos ajustáveis: quanto uma palavra solta vs. um bigrama (par de palavras)
-// pesa no cálculo. Suba PESO_BIGRAMA para priorizar frases exatas; abaixe para
-// depender mais de palavras isoladas.
-var PESO_PALAVRA = 1;
-var PESO_BIGRAMA = 2.2;
-
-function extrairTokens(texto){
-  var palavras = normalizar(texto).split(' ').filter(function(p){
-    return p.length >= 2 && !STOPWORDS.has(p);
+function aplicarSinonimos(texto) {
+  var txt = normalizar(texto);
+  // Ordena os sinônimos pelos mais longos primeiro (para que frases substituam antes de palavras soltas)
+  var sins = config.sinonimos.slice().sort(function(a,b){ return b.de.length - a.de.length; });
+  
+  sins.forEach(function(s) {
+    var deNorm = normalizar(s.de);
+    var paraNorm = normalizar(s.para).replace(/\s+/g, '_'); // Une espaços do destino com underline
+    // Usa expressão regular para substituir a palavra/frase exata
+    var regex = new RegExp('\\b' + deNorm + '\\b', 'g');
+    txt = txt.replace(regex, paraNorm);
   });
-  var mapa = new Map(); // token -> peso acumulado
-  palavras.forEach(function(p){
-    mapa.set(p, (mapa.get(p) || 0) + PESO_PALAVRA);
-  });
-  for (var i = 0; i < palavras.length - 1; i++){
-    var bigrama = palavras[i] + '_' + palavras[i+1];
-    mapa.set(bigrama, (mapa.get(bigrama) || 0) + PESO_BIGRAMA);
-  }
-  return mapa;
+  return txt;
 }
 
+// Modifiquei a função normalizar para NÃO remover os sinais de + e -
+function normalizar(texto, manterBooleanos = false){
+  var limpo = String(texto || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    
+  if (manterBooleanos) {
+    // Mantém letras, números, espaços, _, + e -
+    limpo = limpo.replace(/[^a-z0-9\s_\+\-]/g,' ');
+  } else {
+    // Limpeza tradicional para a base de dados
+    limpo = limpo.replace(/[^a-z0-9\s_]/g,' ');
+  }
+  
+  return limpo.replace(/\s+/g,' ').trim();
+}
+
+// A função de extração agora identifica regras estritas
+function extrairTokens(texto){
+  var setStopwords = new Set(config.stopwords);
+  
+  // Lista para guardar palavras com bônus (+) ou veto (-)
+  var palavrasObrigatorias = new Set();
+  var palavrasVetadas = new Set();
+
+  // 1. Detecta comandos booleanos ANTES da limpeza pesada e dos sinônimos
+  var textoComSinais = normalizar(texto, true);
+  var tokensBrutos = textoComSinais.split(' ');
+  
+  var textoLimpoBase = [];
+
+  tokensBrutos.forEach(function(token) {
+    var palavraLimpa = token.replace(/[\+\-]/g, ''); // Tira o sinal para poder comparar depois
+    
+    if (token.startsWith('+') && palavraLimpa.length >= 2) {
+      palavrasObrigatorias.add(palavraLimpa);
+    } else if (token.startsWith('-') && palavraLimpa.length >= 2) {
+      palavrasVetadas.add(palavraLimpa);
+    }
+    
+    if (palavraLimpa) textoLimpoBase.push(palavraLimpa);
+  });
+
+  // 2. Reconstrói o texto sem os sinais de + e - para o motor principal
+  var textoParaProcessar = textoLimpoBase.join(' ');
+
+  // 3. Aplica sinônimos
+  var textoProcessado = aplicarSinonimos(textoParaProcessar);
+
+  // 4. Separa as palavras finais e remove stopwords
+  var palavras = textoProcessado.split(' ').filter(function(p){
+    return p.length >= 2 && !setStopwords.has(p);
+  });
+  
+  var mapa = new Map(); // token -> peso
+  
+  // 5. Aplica os Pesos e os Modificadores Booleanos
+  palavras.forEach(function(p){
+    var pesoBase = config.pesoPalavra;
+    
+    // Se a palavra (ou o sinônimo dela) foi marcada com +, multiplica o peso
+    if (palavrasObrigatorias.has(p)) {
+      pesoBase *= config.multiplicadorMais;
+    }
+    
+    // Se foi marcada com -, aplica a penalidade configurada
+    if (palavrasVetadas.has(p)) {
+      pesoBase += config.punicaoMenos; // Ex: vira um número negativo forte (-10)
+    }
+
+    mapa.set(p, (mapa.get(p) || 0) + pesoBase);
+  });
+  
+  // 6. Bigramas seguem a mesma regra
+  for (var i = 0; i < palavras.length - 1; i++){
+    var bigrama = palavras[i] + '_' + palavras[i+1];
+    var pesoBi = config.pesoBigrama;
+    
+    // Se o bigrama contiver uma palavra vetada, o bigrama inteiro é envenenado
+    if (palavrasVetadas.has(palavras[i]) || palavrasVetadas.has(palavras[i+1])) {
+       pesoBi += config.punicaoMenos;
+    } 
+    // Se contiver uma palavra obrigatória, ganha impulso
+    else if (palavrasObrigatorias.has(palavras[i]) || palavrasObrigatorias.has(palavras[i+1])) {
+       pesoBi *= (config.multiplicadorMais / 2); // Metade do multiplicador para não exagerar
+    }
+
+    mapa.set(bigrama, (mapa.get(bigrama) || 0) + pesoBi);
+  }
+  
+  return mapa;
+}
 /* =========================================================
    Classificador (Bayes ingênuo sobre unigramas + bigramas)
    ========================================================= */
@@ -733,50 +1291,109 @@ function treinarModelo(casos){
   return { classes:classes, vocab:vocab, totalCasos:casos.length, numClasses:numClasses, idf:idf };
 }
 
+/* =========================================================
+   Classificador Forense (Bayes + Jaccard + Booleanos + IDF)
+   ========================================================= */
 function classificar(query, modelo){
   var tokensQuery = extrairTokens(query); // Map<token, peso>
   if (tokensQuery.size === 0 || modelo.numClasses === 0) return [];
 
   var V = modelo.vocab.size || 1;
-  var totalPesoQuery = 0;
-  tokensQuery.forEach(function(p){ totalPesoQuery += p; });
-  var resultados = [];
+  var totalPesoQueryReal = 0;
+  var termosNegativos = new Set(); 
+
+  // 1. INJEÇÃO DO BM25 IDF
+  var tokensComIDF = new Map();
+
+  tokensQuery.forEach(function(pesoBase, token){
+    if (pesoBase < 0) {
+      termosNegativos.add(token);
+      tokensComIDF.set(token, pesoBase); // Mantém a punição booleana original
+    } else {
+      // AQUI ESTÁ A MUDANÇA DO IDF LIGADA À ENGRENAGEM:
+      // Se o checkIDF estiver marcado na aba de Ajustes, usa o peso raro. Se não, usa 1 (neutro).
+      var pesoIdf = (config.ativarIDF && modelo.idf.has(token)) ? modelo.idf.get(token) : 1; 
+      
+      var pesoAjustado = pesoBase * pesoIdf; 
+      tokensComIDF.set(token, pesoAjustado);
+      totalPesoQueryReal += pesoAjustado;
+    }
+  });
+
+  var resultadosBrutos = [];
 
   Object.keys(modelo.classes).forEach(function(chave){
     var cls = modelo.classes[chave];
+    
     var prior = (cls.numExemplos + 1) / (modelo.totalCasos + modelo.numClasses);
     var logScore = Math.log(prior);
+    
     var pesoCoberto = 0;
+    var pesoPenalizado = 0;
+    
+    var termosDaCausaNoQuery = 0; 
+    var totalTermosNaCausa = cls.contagem.size;
 
-    tokensQuery.forEach(function(pesoQuery, token){
+    // 2. Compara a busca com os arquivos do Oráculo
+    tokensComIDF.forEach(function(pesoQuery, token){
       var count = cls.contagem.get(token) || 0;
-      var prob = (count + 1) / (cls.total + V);
-      logScore += pesoQuery * Math.log(prob); // termos mais pesados (bigramas) pesam mais no escore
-      if (count > 0) pesoCoberto += pesoQuery;
+      
+      if (pesoQuery < 0 && count > 0) {
+         pesoPenalizado += Math.abs(pesoQuery); 
+         logScore += pesoQuery; 
+         return; 
+      }
+      
+      if (pesoQuery > 0) {
+        var prob = (count + 1) / (cls.total + V);
+        
+        logScore += pesoQuery * Math.log(prob);
+        
+        if (count > 0) {
+          pesoCoberto += pesoQuery;
+          termosDaCausaNoQuery++;
+        }
+      }
     });
 
-    var termosCombinados = Array.from(tokensQuery.keys())
-      .filter(function(t){ return (cls.contagem.get(t) || 0) > 0; })
-      .sort(function(a,b){ return tokensQuery.get(b) - tokensQuery.get(a); }); // bigramas (peso maior) primeiro
+    if (pesoCoberto === 0 || pesoPenalizado > pesoCoberto) return; 
 
-    resultados.push({
+    // 3. Fator Jaccard (Pureza Contextual)
+    var totalTermosUnicosQuery = Array.from(tokensComIDF.keys()).filter(t => tokensComIDF.get(t) > 0).length;
+    var uniao = (totalTermosNaCausa + totalTermosUnicosQuery) - termosDaCausaNoQuery;
+    var jaccardIndex = uniao > 0 ? (termosDaCausaNoQuery / uniao) : 0;
+    
+    // AQUI ESTÁ A MUDANÇA DO JACCARD LIGADA À ENGRENAGEM:
+    // Ele multiplica o índice de pureza pelo valor que você definiu no slider do Jaccard
+    logScore += (jaccardIndex * config.pesoJaccard);
+
+    // 4. Monta a lista visual de "Pistas Confirmadas"
+    var termosCombinados = Array.from(tokensComIDF.keys())
+      .filter(function(t){ return (cls.contagem.get(t) || 0) > 0 && tokensComIDF.get(t) > 0; })
+      .sort(function(a,b){ return tokensComIDF.get(b) - tokensComIDF.get(a); });
+
+    resultadosBrutos.push({
       nome: cls.nome,
-      logScore: logScore,
+      logScore: logScore, 
       detalhes: cls.detalhes,
       categoria: cls.categoria,
       numExemplos: cls.numExemplos,
-      cobertura: Math.round((pesoCoberto / totalPesoQuery) * 100),
+      cobertura: Math.round((pesoCoberto / totalPesoQueryReal) * 100), 
       termos: termosCombinados.slice(0, 6)
     });
   });
 
-  var maxLog = Math.max.apply(null, resultados.map(function(r){ return r.logScore; }));
-  var exps = resultados.map(function(r){ return Math.exp(r.logScore - maxLog); });
-  var soma = exps.reduce(function(a,b){ return a+b; }, 0);
-  resultados.forEach(function(r, i){ r.probabilidade = exps[i] / soma; });
+  if (resultadosBrutos.length === 0) return [];
 
-  resultados.sort(function(a,b){ return b.probabilidade - a.probabilidade; });
-  return resultados;
+  // 5. Softmax (Transforma em porcentagem)
+  var maxLog = Math.max.apply(null, resultadosBrutos.map(function(r){ return r.logScore; }));
+  var exps = resultadosBrutos.map(function(r){ return Math.exp(r.logScore - maxLog); });
+  var soma = exps.reduce(function(a,b){ return a+b; }, 0);
+  
+  resultadosBrutos.forEach(function(r, i){ r.probabilidade = exps[i] / soma; });
+  resultadosBrutos.sort(function(a,b){ return b.probabilidade - a.probabilidade; });
+  
+  return resultadosBrutos;
 }
 
 /* =========================================================
@@ -917,12 +1534,12 @@ function tierDe(pct){
 function renderResultados(resultados){
   var area = $('areaConsulta');
   if (!resultados.length){
-    area.innerHTML = '<div class="empty-state"><p>Nenhum termo da descrição foi reconhecido no arquivo.<br>Tente reformular ou cadastre essa situação como uma nova causa.</p></div>';
+    area.innerHTML = '<div class="empty-state"><p>O Oráculo silencia. Nenhum termo da descrição bate com os arquivos.<br>Reformule a busca ou cadastre esta situação inédita.</p></div>';
     return;
   }
 
   var top5 = resultados.slice(0, 5);
-  var html = '<p class="resultado-intro">HIPÓTESES ORDENADAS POR PROBABILIDADE</p>';
+  var html = '<p class="resultado-intro">VEREDICTO DO ORÁCULO</p>';
 
   top5.forEach(function(r, i){
     var pct = Math.round(r.probabilidade * 100);
@@ -932,6 +1549,13 @@ function renderResultados(resultados){
       return '<span class="chip">' + escapeHtml(t.replace(/_/g,' ')) + '</span>';
     }).join('');
 
+    // Preparando um texto limpo para o WhatsApp (sem HTML)
+    var textoCopia = "🔍 *Oráculo Dedutivo*\n\n" + 
+                     "Fato: *" + r.nome + "* (" + pct + "% de probabilidade)\n" +
+                     (r.detalhes ? "\n💡 *Solução / Notas:*\n" + r.detalhes : "");
+                     
+    var encodeCopia = encodeURIComponent(textoCopia);
+
     html +=
       '<div class="result-card ' + tier + '">' +
         '<div class="stamp-circle"><span class="num">' + pct + '</span><span class="pct">%</span></div>' +
@@ -939,18 +1563,27 @@ function renderResultados(resultados){
           '<div class="result-rank">' + rotulo + '</div>' +
           '<div class="result-nome">' + escapeHtml(r.nome) + '</div>' +
           (r.categoria ? '<div style="margin-top:4px;">' + badgeCategoriaHtml(r.categoria) + '</div>' : '') +
-          '<div class="result-meta">' + r.cobertura + '% dos termos reconhecidos · baseado em ' + r.numExemplos + ' registro' + (r.numExemplos>1?'s':'') + '</div>' +
+          '<div class="result-meta">' + r.cobertura + '% dos indícios confirmados · Base: ' + r.numExemplos + ' registro' + (r.numExemplos>1?'s':'') + '</div>' +
           (chips ? '<div class="chip-row">' + chips + '</div>' : '') +
-          (r.detalhes ? '<button class="detalhes-toggle" data-idx="' + i + '">Ver detalhes</button><div class="detalhes-texto" id="detalhes-' + i + '">' + escapeHtml(r.detalhes) + '</div>' : '') +
+          (r.detalhes ? '<div class="detalhes-texto" id="detalhes-' + i + '">' + escapeHtml(r.detalhes) + '</div>' : '') +
+          
+          // Nova área de botões: em bloco abaixo do texto para não espremer no celular
+          '<div style="display:flex; gap:8px; margin-top:12px; border-top:1px solid rgba(0,0,0,0.05); padding-top:12px;">' +
+             (r.detalhes ? '<button class="btn-link detalhes-toggle" data-idx="' + i + '" style="flex:1; text-align:center;">Ver detalhes</button>' : '') +
+             '<button class="btn-link btn-copy" data-copy="' + encodeCopia + '" style="flex:1; text-align:center;">📋 Copiar Resposta</button>' +
+          '</div>' +
+
         '</div>' +
       '</div>';
   });
 
   if (top5[0].probabilidade < 0.34 || top5[0].cobertura < 20){
-    html += '<div class="aviso-confianca">Confiança baixa: poucos termos da sua descrição batem com o que está arquivado. Considere cadastrar mais exemplos ou detalhar melhor a descrição.</div>';
+    html += '<div class="aviso-confianca">Aviso: Os indícios são fracos. O Oráculo sugere detalhar melhor os sintomas ou ampliar a base de dados.</div>';
   }
 
   area.innerHTML = html;
+  
+  // Evento do botão de detalhes
   area.querySelectorAll('.detalhes-toggle').forEach(function(btn){
     btn.addEventListener('click', function(){
       var alvo = $('detalhes-' + btn.getAttribute('data-idx'));
@@ -958,8 +1591,21 @@ function renderResultados(resultados){
       btn.textContent = aberto ? 'Ocultar detalhes' : 'Ver detalhes';
     });
   });
-}
 
+  // Evento infalível para cópia limpa
+  area.querySelectorAll('.btn-copy').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      e.stopPropagation(); // Evita conflitos com outros cliques no card
+      var textoLimpo = decodeURIComponent(btn.getAttribute('data-copy'));
+      
+      navigator.clipboard.writeText(textoLimpo).then(function(){
+        toast('Copiado com sucesso para a área de transferência!');
+      }).catch(function(err){
+        toast('Erro ao copiar. Seu navegador pode estar bloqueando.');
+      });
+    });
+  });
+}
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, function(c){
     return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
@@ -1122,20 +1768,109 @@ function renderArquivo(filtro){
 $('btnIrNovoDeArquivo').addEventListener('click', function(){ mudarAba('novo'); });
 $('btnSeedArquivo').addEventListener('click', carregarExemplos);
 
+/* =========================================================
+   Exportação Seletiva de Arquivos (Cartuchos)
+   ========================================================= */
+
+// 1. Abre o modal e preenche com as categorias existentes
 $('btnExportar').addEventListener('click', function(){
-  if (!todosCasos.length){ toast('Não há registros para exportar.'); return; }
-  var blob = new Blob([JSON.stringify(todosCasos, null, 2)], { type:'application/json' });
+  if (!todosCasos.length){ 
+    toast('Não há registros para exportar.'); 
+    return; 
+  }
+  
+  // Extrai categorias únicas (Se não tiver, vira "Sem Categoria")
+  var categoriasUnicas = new Set();
+  todosCasos.forEach(function(c){
+    categoriasUnicas.add(c.categoria ? c.categoria.trim() : 'Sem Categoria');
+  });
+  
+  var listaDiv = $('listaCategoriasExport');
+  listaDiv.innerHTML = '';
+  
+  // Cria os checkboxes marcados por padrão
+  Array.from(categoriasUnicas).sort().forEach(function(cat){
+    var div = document.createElement('div');
+    div.className = 'cat-export-item';
+    // O valor do input guarda o nome real da categoria
+    div.innerHTML = '<label style="display:flex; align-items:center; gap:10px; width:100%; cursor:pointer;">' +
+                    '<input type="checkbox" checked value="' + escapeHtml(cat) + '"> ' +
+                    '<span>' + escapeHtml(cat) + '</span>' +
+                    '</label>';
+    listaDiv.appendChild(div);
+  });
+  
+  // Reseta os estados do modal
+  $('inputNomeExport').value = '';
+  $('btnToggleCategorias').textContent = 'Desmarcar Todas';
+  $('modalExportOverlay').classList.remove('hidden');
+});
+
+// 2. Lógica do botão Marcar/Desmarcar Todas
+$('btnToggleCategorias').addEventListener('click', function(e){
+  var btn = e.target;
+  var checkboxes = $('listaCategoriasExport').querySelectorAll('input[type="checkbox"]');
+  var marcar = btn.textContent === 'Marcar Todas';
+  
+  checkboxes.forEach(function(cb){ 
+    cb.checked = marcar; 
+  });
+  
+  btn.textContent = marcar ? 'Desmarcar Todas' : 'Marcar Todas';
+});
+
+// 3. Cancela e fecha o modal
+$('btnCancelExport').addEventListener('click', function(){
+  $('modalExportOverlay').classList.add('hidden');
+});
+
+// 4. Confirma e gera o JSON apenas com o que foi escolhido
+$('btnConfirmExport').addEventListener('click', function(){
+  var checkboxes = $('listaCategoriasExport').querySelectorAll('input[type="checkbox"]:checked');
+  
+  if (checkboxes.length === 0) {
+    toast('Selecione ao menos uma categoria para exportar.');
+    return;
+  }
+  
+  // Mapeia quais categorias o usuário marcou
+  var categoriasSelecionadas = Array.from(checkboxes).map(function(cb){ return cb.value; });
+  
+  // Filtra o banco de dados principal
+  var casosParaExportar = todosCasos.filter(function(c){
+    var cat = c.categoria ? c.categoria.trim() : 'Sem Categoria';
+    return categoriasSelecionadas.includes(cat);
+  });
+  
+  if (!casosParaExportar.length) {
+    toast('Nenhum registro encontrado nas categorias selecionadas.');
+    return;
+  }
+
+  // Gera o arquivo
+  var blob = new Blob([JSON.stringify(casosParaExportar, null, 2)], { type:'application/json' });
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
+  
+  // Formata o nome do arquivo
+  var nomePersonalizado = $('inputNomeExport').value.trim();
   var data = new Date();
   var stamp = data.getFullYear() + String(data.getMonth()+1).padStart(2,'0') + String(data.getDate()).padStart(2,'0');
+  
+  // Se o usuário digitou um nome, remove caracteres especiais e usa. Se não, usa o padrão.
+  var nomeArquivo = nomePersonalizado 
+    ? nomePersonalizado.replace(/[^a-z0-9áéíóúãõç]/gi, '-').toLowerCase() + '.json'
+    : 'oraculo-' + stamp + '.json';
+  
   a.href = url;
-  a.download = 'oraculo-dedutivo-backup-' + stamp + '.json';
+  a.download = nomeArquivo;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  toast('Backup exportado.');
+  
+  toast(casosParaExportar.length + ' registro(s) exportado(s).');
+  $('modalExportOverlay').classList.add('hidden');
 });
 
 $('btnImportarTrigger').addEventListener('click', function(){ $('inputImportar').click(); });
