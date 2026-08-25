@@ -554,6 +554,38 @@
 .config-group[open] summary .seta {
   transform: rotate(180deg);
 }
+.chip-pista {
+  background: rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.1);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+.chip-pista:active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  transform: scale(0.96);
+}
+/* Estado da tag quando ela já está na caixa de pesquisa */
+.chip-pista.selecionada {
+  background: var(--primary);
+  color: #a3283a;
+  border-color: var(--primary);
+}
+/* Card tocável para o Locutor */
+.result-card.tocavel {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.result-card.tocavel:active {
+  transform: scale(0.98);
+}
 </style>
 </head>
 <body>
@@ -561,8 +593,10 @@
 <div class="app">
   <header class="app-header">
     <span class="case-no">ARQUIVO Nº <span id="numeroArquivo">000</span></span>
-    <h1 class="app-title">Oráculo Dedutivo</h1>
-    <p class="app-subtitle">Descreva os fatos — o sistema cruza com seus registros e aponta as causas mais prováveis. Tudo salvo apenas neste aparelho.</p>
+    <h1 class="app-title" style="text-align: center; display: flex; gap: 10px; justify-content: center;">Oráculo<button id="btnToggleVoz" class="icon-btn" aria-label="Ativar Voz" style="background:rgba(0,0,0,0.06); color:#333; border-radius:8px; transition: 0.3s;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+            </button></h1>
+    <p class="app-subtitle">Descreva os fatos — o sistema cruza com seus registros e aponta as causas mais prováveis.</p>
   </header>
 
   <main class="app-main" id="appMain">
@@ -573,11 +607,34 @@
         <div class="card-body">
           <label class="field-label" for="queryInput">DESCREVA OS FATOS</label>
           <textarea id="queryInput" placeholder="Ex.: o carro não liga, dou a partida e só ouço um clique, os faróis estavam fracos hoje de manhã..."></textarea>
-          <button id="btnConsultar" class="btn-stamp">Deduzir</button>
+          
+          <div style="display:flex; gap:8px; align-items:center; margin-top: 8px;">
+            <button id="btnConsultar" class="btn-stamp" style="flex:1; margin:0;">Deduzir</button>
+            
+          </div>
+
+          <!-- Painel Explorador com o botão Limpar embutido no título -->
+          <details class="config-group" id="painelExplorador" style="margin-top: 15px; margin-bottom: 0;">
+            <summary style="display:flex; justify-content:space-between; align-items:center;flex-direction: row-reverse;">
+              <span class="seta">▼</span>
+              <span>🕵️ Explorar Pistas Rápidas</span>
+              
+              <div style="display:flex; gap:12px; align-items:center;">
+                <!-- O botão da vassoura (Limpar) -->
+                <button id="btnLimparBuscaInterno" class="btn-link" style="color:var(--danger); padding:0; font-size:0.8rem; margin-right: 9vw;" aria-label="Limpar Pesquisa">
+                  Limpar
+                </button>
+                
+              </div>
+            </summary>
+            <div class="card-body" id="areaExploradorBody">
+              <!-- Categorias e Tags aparecerão aqui -->
+            </div>
+          </details>
         </div>
       </div>
 
-      <div id="areaConsulta"></div>
+      <div id="areaConsulta" style="max-height: 36vh; overflow-y: auto;"></div>
     </section>
 
     <!-- ===== TAB: NOVO REGISTRO ===== -->
@@ -628,7 +685,7 @@
         <input type="file" id="inputImportar" accept="application/json" style="display:none;">
       </div>
 
-      <div id="listaArquivo"></div>
+      <div id="listaArquivo" style="max-height: 36vh;overflow-y: auto;"></div>
       <div id="estadoVazioArquivo" class="empty-state" style="display:none;">
         <div class="empty-icon">🗂</div>
         <p>Nenhum registro arquivado ainda.<br>Adicione uma causa ou carregue exemplos de demonstração.</p>
@@ -659,7 +716,13 @@
 
       <!-- 1. Pesos Base e Booleanos -->
       <details class="config-group">
-        <summary><span>🎛️ Sensibilidade Base (Bayes & Booleanos)</span> <span class="seta">▼</span></summary>
+        <summary>
+          <span>🎛️ Sensibilidade Base</span>
+          <div style="display:flex; gap:12px; align-items:center;">
+            <button id="btnResetSensibilidade" class="btn-link" style="color:var(--danger); font-size:0.75rem; padding:0;">Restaurar</button>
+            <span class="seta">▼</span>
+          </div>
+        </summary>
         <div class="card-body">
           <label class="field-label">PESO DA PALAVRA SOLTA (<span id="valPesoPalavra">1</span>)</label>
           <input type="range" id="rangePalavra" min="0.1" max="5" step="0.1" value="1" style="width:100%; margin-bottom:15px;">
@@ -675,41 +738,56 @@
         </div>
       </details>
 
-      <!-- 2. Motores Avançados (NOVO) -->
+      <!-- 2. Motores Avançados -->
       <details class="config-group">
-        <summary><span>🧠 Motores Avançados (Forense)</span> <span class="seta">▼</span></summary>
+        <summary>
+          <span>🧠 Motores Avançados (Forense)</span>
+          <div style="display:flex; gap:12px; align-items:center;">
+            <button id="btnResetForense" class="btn-link" style="color:var(--danger); font-size:0.75rem; padding:0;">Restaurar</button>
+            <span class="seta">▼</span>
+          </div>
+        </summary>
         <div class="card-body">
           <label class="field-label">FORÇA DO ÍNDICE JACCARD (<span id="valPesoJaccard">2</span>)</label>
           <input type="range" id="rangeJaccard" min="0" max="10" step="0.5" value="2" style="width:100%; margin-bottom:5px;">
           <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:20px;">
-            Punição para "Overfitting" (causas com texto longo onde você acertou poucas palavras). Deixe em 0 para desativar.
+            Punição para "Overfitting". Deixe em 0 para desativar.
           </p>
 
           <label class="field-label" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
             <input type="checkbox" id="checkIDF" style="width:18px; height:18px; accent-color:var(--primary);">
             ATIVAR BM25 / IDF (Raridade)
           </label>
-          <p style="font-size:0.75rem; color:var(--text-muted); margin-top:5px; margin-bottom:0;">
-            Aumenta massivamente o peso de palavras raras exclusivas e diminui o peso de palavras genéricas.
-          </p>
         </div>
       </details>
 
       <!-- 3. Stopwords -->
       <details class="config-group">
-        <summary><span>🛑 Palavras Ignoradas (Stopwords)</span> <span class="seta">▼</span></summary>
+        <summary>
+          <span>🛑 Palavras Ignoradas</span>
+          <div style="display:flex; gap:12px; align-items:center;">
+            <button id="btnResetStopwords" class="btn-link" style="color:var(--danger); font-size:0.75rem; padding:0;">Restaurar</button>
+            <span class="seta">▼</span>
+          </div>
+        </summary>
         <div class="card-body">
           <div style="display:flex; gap:8px; margin-bottom:12px;">
             <input type="text" id="inputStopword" placeholder="Ex: quando" style="flex:1;">
             <button id="btnAddStopword" class="btn btn-small">+</button>
           </div>
-          <div id="areaStopwords" class="chip-container"></div>
+          <div id="areaStopwords" class="chip-container" style="overflow-y: auto; max-height: 35vh;"></div>
         </div>
       </details>
 
       <!-- 4. Sinônimos -->
       <details class="config-group">
-        <summary><span>🔗 Dicionário de Sinônimos</span> <span class="seta">▼</span></summary>
+        <summary>
+          <span>🔗 Dicionário de Sinônimos</span>
+          <div style="display:flex; gap:12px; align-items:center;">
+            <button id="btnResetSinonimos" class="btn-link" style="color:var(--danger); font-size:0.75rem; padding:0;">Restaurar</button>
+            <span class="seta">▼</span>
+          </div>
+        </summary>
         <div class="card-body">
           <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
             <input type="text" id="inputSinonimoDe" placeholder="Se digitar (Ex: bateria arriada)">
@@ -718,7 +796,7 @@
               <button id="btnAddSinonimo" class="btn btn-small">+</button>
             </div>
           </div>
-          <div id="areaSinonimos" style="display:flex; flex-direction:column; gap:8px;"></div>
+          <div id="areaSinonimos" style="display:flex; flex-direction:column; gap:8px; overflow-y: auto; max-height: 35vh;"></div>
         </div>
       </details>
 
@@ -882,6 +960,10 @@ var config = JSON.parse(localStorage.getItem('OraculoConfig')) || JSON.parse(JSO
 
 function salvarConfig() {
   localStorage.setItem('OraculoConfig', JSON.stringify(config));
+  // Ao mudar uma regra matemática, reconstrói a matriz de conhecimento 
+  if (todosCasos.length > 0) {
+      modeloTreinadoCache = treinarModelo(todosCasos);
+  }
 }
 // Prevenção de quebra para configs antigas salvas
 if(config.pesoJaccard === undefined) config.pesoJaccard = configPadrao.pesoJaccard;
@@ -1024,6 +1106,76 @@ $('btnRestaurarConfig').addEventListener('click', function(){
       renderStopwords();
       renderSinonimos();
       toast('Ajustes restaurados.');
+    }
+  });
+});
+/* =========================================================
+   Resets Individuais de Configuração
+   ========================================================= */
+
+// 1. Reset da Sensibilidade Base
+$('btnResetSensibilidade').addEventListener('click', function(e){
+  e.stopPropagation();
+  confirmar('Restaurar pesos base e multiplicadores booleanos para o padrão?').then(function(ok){
+    if(ok) {
+      config.pesoPalavra = configPadrao.pesoPalavra;
+      config.pesoBigrama = configPadrao.pesoBigrama;
+      config.multiplicadorMais = configPadrao.multiplicadorMais;
+      config.punicaoMenos = configPadrao.punicaoMenos;
+      salvarConfig();
+      
+      $('rangePalavra').value = config.pesoPalavra;
+      $('valPesoPalavra').textContent = config.pesoPalavra;
+      $('rangeBigrama').value = config.pesoBigrama;
+      $('valPesoBigrama').textContent = config.pesoBigrama;
+      $('rangeMultiplicadorMais').value = config.multiplicadorMais;
+      $('valMultiplicadorMais').textContent = config.multiplicadorMais;
+      $('rangePunicaoMenos').value = config.punicaoMenos;
+      $('valPunicaoMenos').textContent = config.punicaoMenos;
+      toast('Sensibilidade restaurada.');
+    }
+  });
+});
+
+// 2. Reset dos Motores Forenses
+$('btnResetForense').addEventListener('click', function(e){
+  e.stopPropagation();
+  confirmar('Restaurar motor Jaccard e IDF para o padrão?').then(function(ok){
+    if(ok) {
+      config.pesoJaccard = configPadrao.pesoJaccard;
+      config.ativarIDF = configPadrao.ativarIDF;
+      salvarConfig();
+      
+      $('rangeJaccard').value = config.pesoJaccard;
+      $('valPesoJaccard').textContent = config.pesoJaccard;
+      $('checkIDF').checked = config.ativarIDF;
+      toast('Motor forense restaurado.');
+    }
+  });
+});
+
+// 3. Reset de Stopwords
+$('btnResetStopwords').addEventListener('click', function(e){
+  e.stopPropagation();
+  confirmar('Substituir suas Stopwords atuais pela lista de fábrica?').then(function(ok){
+    if(ok) {
+      config.stopwords = JSON.parse(JSON.stringify(configPadrao.stopwords));
+      salvarConfig();
+      renderStopwords();
+      toast('Lista de Stopwords restaurada.');
+    }
+  });
+});
+
+// 4. Reset de Sinônimos
+$('btnResetSinonimos').addEventListener('click', function(e){
+  e.stopPropagation();
+  confirmar('Apagar todos os seus sinônimos e voltar ao padrão?').then(function(ok){
+    if(ok) {
+      config.sinonimos = JSON.parse(JSON.stringify(configPadrao.sinonimos));
+      salvarConfig();
+      renderSinonimos();
+      toast('Dicionário de sinônimos restaurado.');
     }
   });
 });
@@ -1423,6 +1575,7 @@ function badgeCategoriaHtml(nome){
    ========================================================= */
 var todosCasos = [];
 var editandoId = null;
+var modeloTreinadoCache = null; // <-- O NOVO CÉREBRO EM CACHE
 
 /* =========================================================
    Utilidades de UI
@@ -1490,9 +1643,20 @@ var MENSAGENS_CARREGANDO = [
   'Calculando probabilidades...'
 ];
 
+var MENSAGENS_CARREGANDO = [
+  'Cruzando os fatos com o arquivo...',
+  'Separando palavras e bigramas...',
+  'Comparando com registros conhecidos...',
+  'Calculando probabilidades...'
+];
+
 $('btnConsultar').addEventListener('click', function(){
   var texto = $('queryInput').value.trim();
   var area = $('areaConsulta');
+  
+  var painel = $('painelExplorador');
+  if (painel) painel.removeAttribute('open');
+
   area.innerHTML = '';
 
   if (!texto){
@@ -1513,18 +1677,15 @@ $('btnConsultar').addEventListener('click', function(){
     return;
   }
 
-  var msg = MENSAGENS_CARREGANDO[Math.floor(Math.random()*MENSAGENS_CARREGANDO.length)];
-  area.innerHTML = '<div class="loading-line"><span class="loading-dot"></span>' + msg + '</div>';
-  $('btnConsultar').disabled = true;
+  // Se por algum motivo bizarro o cache sumiu, ele recria na hora (segurança)
+  if (!modeloTreinadoCache) {
+    modeloTreinadoCache = treinarModelo(todosCasos);
+  }
 
-  setTimeout(function(){
-    var modelo = treinarModelo(todosCasos);
-    var resultados = classificar(texto, modelo);
-    renderResultados(resultados);
-    $('btnConsultar').disabled = false;
-  }, 550 + Math.random()*350);
+  // A MÁGICA DO NITRO: A dedução agora é instantânea. Sem setTimeout.
+  var resultados = classificar(texto, modeloTreinadoCache);
+  renderResultados(resultados);
 });
-
 function tierDe(pct){
   if (pct >= 55) return 'tier-alta';
   if (pct >= 25) return 'tier-media';
@@ -1541,6 +1702,8 @@ function renderResultados(resultados){
   var top5 = resultados.slice(0, 5);
   var html = '<p class="resultado-intro">VEREDICTO DO ORÁCULO</p>';
 
+  textosDosCards = []; // Zera a memória de voz
+
   top5.forEach(function(r, i){
     var pct = Math.round(r.probabilidade * 100);
     var tier = tierDe(pct);
@@ -1549,6 +1712,11 @@ function renderResultados(resultados){
       return '<span class="chip">' + escapeHtml(t.replace(/_/g,' ')) + '</span>';
     }).join('');
 
+    // Prepara o texto limpo para o Robô ler
+    var fraseLida = rotulo + ". " + pct + "% de chance. " + r.nome + ". ";
+    if (r.detalhes) fraseLida += "Solução: " + r.detalhes + ". ";
+    textosDosCards.push(fraseLida);
+
     // Preparando um texto limpo para o WhatsApp (sem HTML)
     var textoCopia = "🔍 *Oráculo Dedutivo*\n\n" + 
                      "Fato: *" + r.nome + "* (" + pct + "% de probabilidade)\n" +
@@ -1556,8 +1724,9 @@ function renderResultados(resultados){
                      
     var encodeCopia = encodeURIComponent(textoCopia);
 
+    // O Card agora recebe a classe tocavel e onclick="tocarCard(i)"
     html +=
-      '<div class="result-card ' + tier + '">' +
+      '<div class="result-card tocavel ' + tier + '" onclick="tocarCard(' + i + ')">' +
         '<div class="stamp-circle"><span class="num">' + pct + '</span><span class="pct">%</span></div>' +
         '<div class="result-main">' +
           '<div class="result-rank">' + rotulo + '</div>' +
@@ -1567,12 +1736,10 @@ function renderResultados(resultados){
           (chips ? '<div class="chip-row">' + chips + '</div>' : '') +
           (r.detalhes ? '<div class="detalhes-texto" id="detalhes-' + i + '">' + escapeHtml(r.detalhes) + '</div>' : '') +
           
-          // Nova área de botões: em bloco abaixo do texto para não espremer no celular
-          '<div style="display:flex; gap:8px; margin-top:12px; border-top:1px solid rgba(0,0,0,0.05); padding-top:12px;">' +
+          '<div style="display:flex; gap:8px; margin-top:12px; border-top:1px solid rgba(0,0,0,0.05); padding-top:12px;align-items: baseline;">' +
              (r.detalhes ? '<button class="btn-link detalhes-toggle" data-idx="' + i + '" style="flex:1; text-align:center;">Ver detalhes</button>' : '') +
              '<button class="btn-link btn-copy" data-copy="' + encodeCopia + '" style="flex:1; text-align:center;">📋 Copiar Resposta</button>' +
           '</div>' +
-
         '</div>' +
       '</div>';
   });
@@ -1583,9 +1750,11 @@ function renderResultados(resultados){
 
   area.innerHTML = html;
   
-  // Evento do botão de detalhes
+  // Evento do botão de detalhes (para a voz ao abrir detalhes)
   area.querySelectorAll('.detalhes-toggle').forEach(function(btn){
-    btn.addEventListener('click', function(){
+    btn.addEventListener('click', function(e){
+      e.stopPropagation(); // Evita que o card inicie a voz quando clica nos detalhes
+      if (synth && synth.speaking) synth.cancel(); // Cala a boca se estiver falando
       var alvo = $('detalhes-' + btn.getAttribute('data-idx'));
       var aberto = alvo.classList.toggle('show');
       btn.textContent = aberto ? 'Ocultar detalhes' : 'Ver detalhes';
@@ -1595,9 +1764,9 @@ function renderResultados(resultados){
   // Evento infalível para cópia limpa
   area.querySelectorAll('.btn-copy').forEach(function(btn){
     btn.addEventListener('click', function(e){
-      e.stopPropagation(); // Evita conflitos com outros cliques no card
+      e.stopPropagation(); // Evita conflitos com a voz ao copiar
+      if (synth && synth.speaking) synth.cancel(); 
       var textoLimpo = decodeURIComponent(btn.getAttribute('data-copy'));
-      
       navigator.clipboard.writeText(textoLimpo).then(function(){
         toast('Copiado com sucesso para a área de transferência!');
       }).catch(function(err){
@@ -1606,6 +1775,28 @@ function renderResultados(resultados){
     });
   });
 }
+
+// ------------------------------------
+// A Sua Função de Limpeza (Vassoura) Atualizada
+$('btnLimparBuscaInterno').addEventListener('click', function(e) {
+  e.stopPropagation(); 
+  e.preventDefault();
+
+  if (synth && synth.speaking) synth.cancel(); // Cala o robô ao limpar
+  textosDosCards = []; // Zera a playlist
+
+  var input = $('queryInput');
+  input.value = '';
+  input.style.height = 'auto'; 
+  $('areaConsulta').innerHTML = '';
+  
+  if (window.categoriaAtualExplorador) {
+    abrirTagsDaCategoria(window.categoriaAtualExplorador);
+  }
+
+  input.focus();
+  toast('Pesquisa limpa.');
+});
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, function(c){
     return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
@@ -1933,11 +2124,160 @@ function carregarExemplos(){
 }
 
 /* =========================================================
-   Atualização geral de estado
+   Construtor de Pistas (Interruptor Inteligente)
+   ========================================================= */
+window.categoriaAtualExplorador = null; // Guarda onde estamos navegando
+
+window.renderExploradorCategorias = function() {
+  window.categoriaAtualExplorador = null;
+  var area = $('areaExploradorBody');
+  var categorias = new Set();
+  
+  todosCasos.forEach(function(c){ 
+    if(c.categoria) categorias.add(c.categoria.trim()); 
+  });
+
+  if(categorias.size === 0) {
+    area.innerHTML = '<p style="font-size:0.8rem; color:var(--text-muted);">Arquive registros com categorias para explorar pistas aqui.</p>';
+    return;
+  }
+
+  var html = '<p style="font-size:0.8rem; margin-top:0; color:var(--text-muted);">Escolha a área de investigação</p><div class="chip-container">';
+  
+  Array.from(categorias).sort().forEach(function(cat){
+    html += '<button class="chip-pista" onclick="abrirTagsDaCategoria(\'' + escapeHtml(cat) + '\')">📂 ' + escapeHtml(cat) + '</button>';
+  });
+  
+  html += '</div>';
+  area.innerHTML = html;
+};
+
+window.abrirTagsDaCategoria = function(categoria) {
+  window.categoriaAtualExplorador = categoria;
+  var area = $('areaExploradorBody');
+  var tags = new Set();
+  
+  todosCasos.forEach(function(c){
+    if(c.categoria && c.categoria.trim() === categoria && c.tags) {
+      c.tags.forEach(function(t){ tags.add(t); });
+    }
+  });
+
+  var html = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;flex-direction: row-reverse;">' +
+               '<p style="font-size:0.8rem; margin:0; color:var(--text-muted);">Adicione os sintomas</p>' +
+               '<button class="btn-link" onclick="renderExploradorCategorias()" style="font-size:0.75rem;">⬅ Voltar</button>' +
+             '</div>';
+
+  if(tags.size === 0) {
+    html += '<p style="font-size:0.8rem; color:var(--text-muted);">Nenhuma palavra-chave cadastrada nos arquivos desta categoria.</p>';
+  } else {
+    html += '<div class="chip-container">';
+    
+    // Pega o texto que já está na caixa de pesquisa
+    var textoAtual = $('queryInput').value.toLowerCase();
+    
+    Array.from(tags).sort().forEach(function(tag){
+      var tagVisual = tag.replace(/_/g, ' '); 
+      
+      // Verifica se essa tag já foi inserida no texto
+      var jaInserida = textoAtual.indexOf(tagVisual.toLowerCase()) !== -1;
+      
+      // Se já foi inserida, o botão muda para vermelho (-) e ganha a classe 'selecionada'
+      if (jaInserida) {
+        html += '<button class="chip-pista selecionada" onclick="alternarPistaNoInput(\'' + escapeHtml(tagVisual) + '\')">- ' + escapeHtml(tagVisual) + '</button>';
+      } else {
+        html += '<button class="chip-pista" onclick="alternarPistaNoInput(\'' + escapeHtml(tagVisual) + '\')">+ ' + escapeHtml(tagVisual) + '</button>';
+      }
+    });
+    html += '</div>';
+  }
+  area.innerHTML = html;
+};
+
+// Função unificada: Adiciona se não tem, Remove se já tem.
+window.alternarPistaNoInput = function(pista) {
+  var input = $('queryInput');
+  var textoAtual = input.value;
+  var textoMin = textoAtual.toLowerCase();
+  var pistaMin = pista.toLowerCase();
+  
+  // Se a pista já existe no texto, nós a apagamos (remover)
+  if (textoMin.indexOf(pistaMin) !== -1) {
+    // Tenta remover com vírgula e espaço antes ou depois para não deixar sujeira
+    var regex = new RegExp('(,?\\s*' + pistaMin + '\\s*,?|' + pistaMin + ')', 'gi');
+    var novoTexto = textoAtual.replace(regex, ' ').replace(/\s+/g, ' ').trim();
+    
+    // Remove vírgulas presas no começo ou no fim
+    novoTexto = novoTexto.replace(/^,\s*/, '').replace(/,\s*$/, '');
+    
+    input.value = novoTexto;
+    toast('Pista removida.');
+  } 
+  // Se não existe, nós adicionamos
+  else {
+    input.value = textoAtual ? (textoAtual + ', ' + pista) : pista;
+    toast('Pista adicionada.');
+  }
+  
+  autoResize(input);
+  
+  // Atualiza a tela de tags para os botões mudarem de cor na mesma hora
+  if (window.categoriaAtualExplorador) {
+    abrirTagsDaCategoria(window.categoriaAtualExplorador);
+  }
+};
+/* =========================================================
+   Locutor Interativo (Versão Blindada)
+   ========================================================= */
+var vozAtivada = false;
+var textosDosCards = []; 
+var synth = window.speechSynthesis;
+
+// O botão apenas liga ou desliga a permissão
+$('btnToggleVoz').addEventListener('click', function() {
+  vozAtivada = !vozAtivada;
+  this.style.background = vozAtivada ? 'var(--thread-red-bright)' : 'rgba(0,0,0,0.06)';
+  this.style.color = vozAtivada ? '#fff' : '#333';
+  if (!vozAtivada) synth.cancel(); // Cala a boca se desligar
+  toast(vozAtivada ? 'Voz ativada! Toque num resultado.' : 'Voz desativada.');
+});
+
+// A função que roda quando você toca em um Card
+window.tocarCard = function(indexClicado) {
+  if (!vozAtivada) return; 
+
+  // Se já estiver falando, o toque serve para PARAR.
+  if (synth.speaking) {
+    synth.cancel();
+    return;
+  }
+
+  // Se estava calado, junta os textos do card clicado até o último
+  var textoContinuo = "";
+  for (var i = indexClicado; i < textosDosCards.length; i++) {
+    textoContinuo += textosDosCards[i] + " ... ";
+  }
+
+  if (textoContinuo.trim() === "") return;
+
+  var utterance = new SpeechSynthesisUtterance(textoContinuo);
+  utterance.lang = 'pt-BR';
+  utterance.rate = 1.1;
+  
+  // Impede que o Android "esqueça" de falar textos longos
+  window.utteranceAtual = utterance; 
+
+  synth.speak(utterance);
+};
+/* =========================================================
+   Atualização geral de estado e Recálculo do Cérebro
    ========================================================= */
 function refreshAll(){
   return getAllCasos().then(function(casos){
     todosCasos = casos.sort(function(a,b){ return (b.criadoEm||0) - (a.criadoEm||0); });
+
+    // O NITRO SENDO PREPARADO EM SEGUNDO PLANO
+    modeloTreinadoCache = treinarModelo(todosCasos);
 
     $('numeroArquivo').textContent = String(todosCasos.length).padStart(3,'0');
     $('statTotalRegistros').textContent = todosCasos.length;
@@ -1965,9 +2305,13 @@ function refreshAll(){
     datalistCat.innerHTML = categoriasUnicas.map(function(n){ return '<option value="' + escapeHtml(n) + '">'; }).join('');
 
     renderArquivo($('filtroArquivo').value);
+    
+    // Atualiza os chips exploratórios 
+    if (window.renderExploradorCategorias) {
+        window.renderExploradorCategorias();
+    }
   });
 }
-
 /* =========================================================
    Inicialização
    ========================================================= */
