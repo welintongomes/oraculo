@@ -1959,6 +1959,17 @@ $('cancelarEdicao').addEventListener('click', function(){
    ========================================================= */
 $('filtroArquivo').addEventListener('input', function(){ renderArquivo($('filtroArquivo').value); });
 
+/* =========================================================
+   Arquivo: Motor de Renderização de Alta Performance (Scroll Infinito)
+   ========================================================= */
+
+// Variáveis de controle para os 100.000 arquivos
+var gruposGlobaisRender = [];
+var paginaLoteAtual = 0;
+var TAMANHO_DO_LOTE = 25; // Quantidade de grupos carregados por vez
+var sentinelaObserver = null;
+
+// Função mestre que prepara os dados e dispara a renderização
 function renderArquivo(filtro){
   filtro = (filtro || '').toLowerCase().trim();
   var lista = $('listaArquivo');
@@ -1971,6 +1982,7 @@ function renderArquivo(filtro){
   }
   vazio.style.display = 'none';
 
+  // 1. Agrupa os casos na memória (muito rápido)
   var grupos = {};
   var ordemGrupos = [];
   todosCasos.forEach(function(c){
@@ -1979,17 +1991,50 @@ function renderArquivo(filtro){
     grupos[chave].itens.push(c);
   });
 
-  var termosFiltro = filtro;
-  var html = '';
-  ordemGrupos.forEach(function(chave, gi){
+  // 2. Filtra os grupos que combinam com a pesquisa
+  gruposGlobaisRender = [];
+  ordemGrupos.forEach(function(chave){
     var g = grupos[chave];
-    var bateNoNome = g.nome.toLowerCase().indexOf(termosFiltro) !== -1;
+    var bateNoNome = g.nome.toLowerCase().indexOf(filtro) !== -1;
     var itensFiltrados = g.itens.filter(function(it){
-      return !termosFiltro || bateNoNome || (it.sintomas||'').toLowerCase().indexOf(termosFiltro) !== -1;
+      return !filtro || bateNoNome || (it.sintomas||'').toLowerCase().indexOf(filtro) !== -1;
     });
-    if (termosFiltro && itensFiltrados.length === 0) return;
+    
+    if (itensFiltrados.length > 0) {
+      gruposGlobaisRender.push({ nome: g.nome, itens: itensFiltrados });
+    }
+  });
 
+  if (gruposGlobaisRender.length === 0) {
+    lista.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;">Nada encontrado para esse filtro.</p>';
+    return;
+  }
+
+  // 3. Prepara a tela para os lotes
+  lista.innerHTML = ''; 
+  paginaLoteAtual = 0;
+
+  // 4. Inicia o primeiro lote
+  renderizarProximoLote();
+}
+
+// A mágica: Renderiza um pedaço de cada vez
+function renderizarProximoLote() {
+  var lista = $('listaArquivo');
+  var inicio = paginaLoteAtual * TAMANHO_DO_LOTE;
+  var fim = inicio + TAMANHO_DO_LOTE;
+  var lote = gruposGlobaisRender.slice(inicio, fim);
+  
+  if (lote.length === 0) return; // Acabou a lista
+
+  // Cria um container temporário para injetar o HTML sem travar o navegador
+  var fragmentoTemp = document.createElement('div');
+  var html = '';
+
+  lote.forEach(function(g, indexLote){
+    var gi = inicio + indexLote; // ID único real
     var categoriaGrupo = (g.itens.find(function(it){ return it.categoria; }) || {}).categoria;
+    
     html += '<div class="grupo" data-g="' + gi + '">' +
       '<button class="grupo-header" data-toggle="' + gi + '">' +
         '<span class="titulo">' + escapeHtml(g.nome) + (categoriaGrupo ? ' ' + badgeCategoriaHtml(categoriaGrupo) : '') + '</span>' +
@@ -2000,7 +2045,7 @@ function renderArquivo(filtro){
       '</button>' +
       '<div class="grupo-itens">';
 
-    itensFiltrados.forEach(function(it){
+    g.itens.forEach(function(it){
       var trecho = (it.sintomas || '').slice(0, 90);
       html += '<div class="item-linha">' +
         '<div class="item-texto">' + escapeHtml(trecho) + (it.sintomas.length>90?'…':'') + '</div>' +
@@ -2018,29 +2063,57 @@ function renderArquivo(filtro){
     html += '</div></div>';
   });
 
-  lista.innerHTML = html || '<p style="color:var(--text-muted);font-size:.85rem;">Nada encontrado para esse filtro.</p>';
+  fragmentoTemp.innerHTML = html;
 
-  lista.querySelectorAll('[data-toggle]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      btn.closest('.grupo').classList.toggle('open');
-    });
+  // LIGA OS EVENTOS DOS BOTÕES (Apenas nos itens novos)
+  fragmentoTemp.querySelectorAll('[data-toggle]').forEach(function(btn){
+    btn.addEventListener('click', function(){ btn.closest('.grupo').classList.toggle('open'); });
   });
-  lista.querySelectorAll('[data-editar]').forEach(function(btn){
+  fragmentoTemp.querySelectorAll('[data-editar]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var id = Number(btn.getAttribute('data-editar'));
       var caso = todosCasos.find(function(c){ return c.id === id; });
       if (caso) iniciarEdicao(caso);
     });
   });
-  lista.querySelectorAll('[data-excluir]').forEach(function(btn){
+  fragmentoTemp.querySelectorAll('[data-excluir]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var id = Number(btn.getAttribute('data-excluir'));
-      confirmar('Excluir este registro? Essa ação não pode ser desfeita.').then(function(ok){
+      confirmar('Excluir este registro?').then(function(ok){
         if (!ok) return;
         deleteCasoDB(id).then(function(){ toast('Registro excluído.'); return refreshAll(); });
       });
     });
   });
+
+  // Remove sentinela antiga se houver
+  var velhaSentinela = $('sentinela-scroll');
+  if (velhaSentinela) velhaSentinela.remove();
+
+  // Despeja os itens na lista oficial
+  while(fragmentoTemp.firstChild) {
+    lista.appendChild(fragmentoTemp.firstChild);
+  }
+
+  paginaLoteAtual++;
+
+  // 5. Se ainda houver itens para renderizar no futuro, cria a Sentinela
+  if (paginaLoteAtual * TAMANHO_DO_LOTE < gruposGlobaisRender.length) {
+    var sentinela = document.createElement('div');
+    sentinela.id = 'sentinela-scroll';
+    sentinela.style.height = '40px'; // Fica invisível no final da lista
+    lista.appendChild(sentinela);
+
+    // O Cão de Guarda: Se o usuário rolar a tela e ver a sentinela, carrega mais
+    if (!sentinelaObserver) {
+      sentinelaObserver = new IntersectionObserver(function(entries) {
+        if (entries[0].isIntersecting) {
+          renderizarProximoLote();
+        }
+      }, { root: lista, rootMargin: '100px' });
+    }
+    sentinelaObserver.observe(sentinela);
+  }
 }
 
 $('btnIrNovoDeArquivo').addEventListener('click', function(){ mudarAba('novo'); });
