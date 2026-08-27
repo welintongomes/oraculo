@@ -709,7 +709,6 @@
       </div>
     </section>
     <!-- ===== TAB: CONFIGURAÇÕES ===== -->
-    <!-- ===== TAB: CONFIGURAÇÕES ===== -->
     <section id="tab-config" class="tab-panel">
       
       <p style="font-size:0.85rem; color:var(--text-muted); text-align:center; margin-bottom:15px;">
@@ -760,6 +759,14 @@
             <input type="checkbox" id="checkIDF" style="width:18px; height:18px; accent-color:var(--primary);">
             ATIVAR BM25 / IDF (Raridade)
           </label>
+          <!-- O NOVO INTERRUPTOR FUZZY -->
+          <label class="field-label" style="display:flex; align-items:center; gap:10px; cursor:pointer; margin-top: 15px;">
+            <input type="checkbox" id="checkFuzzy" style="width:18px; height:18px; accent-color:var(--primary);">
+            ATIVAR CORRETOR FUZZY (Erros de Digitação)
+          </label>
+          <p style="font-size:0.75rem; color:var(--text-muted); margin-top:5px; margin-bottom:0;">
+            A inteligência repara palavras escritas erradas por aproximação matemática (Ex: "baterya" ➔ "bateria").
+          </p>
         </div>
       </details>
 
@@ -951,6 +958,7 @@ var configPadrao = {
   punicaoMenos: -10.0,    // <-- NOVO aumenta a puniçao ao usar -
   pesoJaccard: 2.0, // <-- NOVO CONTROLE JACCARD
   ativarIDF: true,
+  ativarFuzzy: true, // <-- NOVO CONTROLE FUZZY
   stopwords: ['a','o','as','os','um','uma','de','do','da','em','no','na','por','pra','para','com','e','ou','que','é','foi','ser','esta','este','isso','como','mais','muito','já','só','até','entre','sobre','depois','antes','quando','onde','porque','mas','então','assim','cada','todo','seu','sua','meu','minha','eu','ele','ela','nós','você','lhe','me','se','está','tem','há'],
   sinonimos: [
     // Exemplo inicial: mapeia uma frase para um termo de peso único
@@ -970,6 +978,7 @@ function salvarConfig() {
 // Prevenção de quebra para configs antigas salvas
 if(config.pesoJaccard === undefined) config.pesoJaccard = configPadrao.pesoJaccard;
 if(config.ativarIDF === undefined) config.ativarIDF = configPadrao.ativarIDF;
+if(config.ativarFuzzy === undefined) config.ativarFuzzy = configPadrao.ativarFuzzy; // <-- PREVINE QUEBRA
 // === UI: Controle de Pesos ===
 $('rangePalavra').value = config.pesoPalavra;
 $('valPesoPalavra').textContent = config.pesoPalavra;
@@ -1019,6 +1028,12 @@ $('checkIDF').checked = config.ativarIDF;
 $('checkIDF').addEventListener('change', function(e){
   config.ativarIDF = e.target.checked;
   salvarConfig();
+});
+$('checkFuzzy').checked = config.ativarFuzzy;
+$('checkFuzzy').addEventListener('change', function(e){
+  config.ativarFuzzy = e.target.checked;
+  salvarConfig();
+  toast(config.ativarFuzzy ? 'Corretor Fuzzy ativado.' : 'Corretor Fuzzy desativado.');
 });
 // === UI: Stopwords (Balõezinhos) ===
 function renderStopwords() {
@@ -1146,11 +1161,13 @@ $('btnResetForense').addEventListener('click', function(e){
     if(ok) {
       config.pesoJaccard = configPadrao.pesoJaccard;
       config.ativarIDF = configPadrao.ativarIDF;
+      config.ativarFuzzy = configPadrao.ativarFuzzy;
       salvarConfig();
       
       $('rangeJaccard').value = config.pesoJaccard;
       $('valPesoJaccard').textContent = config.pesoJaccard;
       $('checkIDF').checked = config.ativarIDF;
+      $('checkFuzzy').checked = config.ativarFuzzy;
       toast('Motor forense restaurado.');
     }
   });
@@ -1444,13 +1461,68 @@ function treinarModelo(casos){
 
   return { classes:classes, vocab:vocab, totalCasos:casos.length, numClasses:numClasses, idf:idf };
 }
-
 /* =========================================================
-   Classificador Forense (Bayes + Jaccard + Booleanos + IDF)
+   Distância de Levenshtein (Lógica Fuzzy)
+   ========================================================= */
+function calcularLevenshtein(a, b) {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+  var matriz = [];
+  for (var i = 0; i <= b.length; i++) { matriz[i] = [i]; }
+  for (var j = 0; j <= a.length; j++) { matriz[0][j] = j; }
+  for (var i = 1; i <= b.length; i++) {
+    for (var j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matriz[i][j] = matriz[i - 1][j - 1];
+      } else {
+        matriz[i][j] = Math.min(
+          matriz[i - 1][j - 1] + 1, // substituição
+          Math.min(matriz[i][j - 1] + 1, // inserção
+                   matriz[i - 1][j] + 1) // deleção
+        );
+      }
+    }
+  }
+  return matriz[b.length][a.length];
+}
+/* =========================================================
+   Classificador Forense (Bayes + Jaccard + Booleanos + IDF + Fuzzy)
    ========================================================= */
 function classificar(query, modelo){
-  var tokensQuery = extrairTokens(query); // Map<token, peso>
-  if (tokensQuery.size === 0 || modelo.numClasses === 0) return [];
+  var tokensBrutosQuery = extrairTokens(query); 
+  if (tokensBrutosQuery.size === 0 || modelo.numClasses === 0) return [];
+
+  // A MÁGICA FUZZY: Verifica erros de digitação antes de iniciar o julgamento
+  var tokensQuery = new Map();
+
+  tokensBrutosQuery.forEach(function(pesoBase, tokenOriginal) {
+    var tokenFinal = tokenOriginal;
+    
+    // Só tenta corrigir se o Fuzzy estiver ligado, se a palavra NÃO existir no banco,
+    // e se a palavra for maior que 3 letras (para não confundir abreviações curtas)
+    if (config.ativarFuzzy && !modelo.vocab.has(tokenOriginal) && tokenOriginal.length > 3) {
+      
+      var melhorMatch = tokenOriginal;
+      var menorDist = 2; // Distância mínima tolerada (erros pequenos)
+      // Palavras de até 5 letras perdoam 1 erro. Palavras grandes perdoam 2 erros.
+      var limiteErro = tokenOriginal.length > 5 ? 2 : 1; 
+
+      modelo.vocab.forEach(function(termoVocab) {
+        // Heurística de performance: só compara palavras de tamanhos parecidos
+        if (Math.abs(termoVocab.length - tokenOriginal.length) <= limiteErro) {
+          var dist = calcularLevenshtein(tokenOriginal, termoVocab);
+          if (dist <= limiteErro && dist < menorDist) {
+            menorDist = dist;
+            melhorMatch = termoVocab;
+          }
+        }
+      });
+      tokenFinal = melhorMatch; 
+    }
+
+    // Se o Fuzzy consertou uma palavra para uma que já existia na frase, soma os pesos
+    tokensQuery.set(tokenFinal, (tokensQuery.get(tokenFinal) || 0) + pesoBase);
+  });
 
   var V = modelo.vocab.size || 1;
   var totalPesoQueryReal = 0;
@@ -1462,12 +1534,9 @@ function classificar(query, modelo){
   tokensQuery.forEach(function(pesoBase, token){
     if (pesoBase < 0) {
       termosNegativos.add(token);
-      tokensComIDF.set(token, pesoBase); // Mantém a punição booleana original
+      tokensComIDF.set(token, pesoBase);
     } else {
-      // AQUI ESTÁ A MUDANÇA DO IDF LIGADA À ENGRENAGEM:
-      // Se o checkIDF estiver marcado na aba de Ajustes, usa o peso raro. Se não, usa 1 (neutro).
       var pesoIdf = (config.ativarIDF && modelo.idf.has(token)) ? modelo.idf.get(token) : 1; 
-      
       var pesoAjustado = pesoBase * pesoIdf; 
       tokensComIDF.set(token, pesoAjustado);
       totalPesoQueryReal += pesoAjustado;
