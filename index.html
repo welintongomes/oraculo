@@ -593,12 +593,28 @@
 <body>
 
 <div class="app">
-  <header class="app-header">
-    <span class="case-no">ARQUIVO Nº <span id="numeroArquivo">000</span></span>
-    <h1 class="app-title" style="text-align: center; display: flex; gap: 10px; justify-content: center;">Oráculo<button id="btnToggleVoz" class="icon-btn" aria-label="Ativar Voz" style="background:rgba(0,0,0,0.06); color:#333; border-radius:8px; transition: 0.3s;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-            </button></h1>
-    <p class="app-subtitle">Descreva os fatos — o sistema cruza com seus registros e aponta as causas mais prováveis.</p>
+  <header class="app-header" style="padding: 12px 15px 8px 15px; border-bottom: 1px solid rgba(0,0,0,0.05);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+      
+      <!-- Lado Esquerdo: Título e Botão de Voz -->
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <h1 class="app-title" style="margin: 0; font-size: 1.25rem;">Oráculo</h1>
+        <button id="btnToggleVoz" class="icon-btn" aria-label="Ativar Voz" style="background:rgba(0,0,0,0.06); color:#333; border-radius:8px; padding: 6px; transition: 0.3s;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+        </button>
+      </div>
+
+      <!-- Lado Direito: Número do Arquivo em um "chip" -->
+      <span class="case-no" style="margin: 0; font-size: 0.75rem; background: rgba(0,0,0,0.05); padding: 4px 8px; border-radius: 12px; font-weight: bold;">
+        ARQUIVO <span id="numeroArquivo">000</span>
+      </span>
+
+    </div>
+
+    <!-- Subtítulo menor, direto ao ponto e com espaçamento reduzido -->
+    <p class="app-subtitle" style="margin: 0; font-size: 0.75rem; line-height: 1.3;">
+      Descreva os fatos e descubra as causas mais prováveis.
+    </p>
   </header>
 
   <main class="app-main" id="appMain">
