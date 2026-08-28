@@ -588,6 +588,135 @@
 .result-card.tocavel:active {
   transform: scale(0.98);
 }
+/* para rodar a playlist em renderarquivo */
+.grupo.tocavel {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.grupo.tocavel:active {
+  transform: scale(0.98);
+}
+/* Transparência forense visual */
+.pistas-visuais {
+  background: rgba(0,0,0,0.03);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+.pistas-titulo {
+  font-size: 0.75rem;
+  font-weight: bold;
+  margin: 0;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.pistas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.btn-ajuda-legenda {
+  background: rgba(0,0,0,0.06);
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  padding: 3px 8px;
+  cursor: pointer;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+.btn-ajuda-legenda:active { transform: scale(0.92); }
+.pistas-texto {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin: 0 0 8px 0;
+}
+.pista-confirmada { color: #2e8b57; font-weight: 600; }
+.pista-obrigatoria { color: #b8860b; font-weight: 700; text-decoration: underline; }
+.pista-vetada { color: #c0392b; text-decoration: line-through; opacity: 0.75; }
+.pista-neutra { color: inherit; opacity: 0.55; }
+
+.pistas-legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(0,0,0,0.08);
+}
+.pistas-legenda.hidden { display: none !important; }
+
+.pistas-legenda .dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+.dot.confirmada { background: #2e8b57; }
+.dot.obrigatoria { background: #b8860b; }
+.dot.vetada { background: #c0392b; }
+
+/* Pergunta de volta */
+.pergunta-oraculo {
+  background: rgba(0,0,0,0.03);
+  border-left: 3px solid var(--primary);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 10px 0 14px 0;
+}
+.pergunta-oraculo p {
+  margin: 0 0 8px 0;
+  font-size: 0.85rem;
+}
+.btn-responder-oraculo {
+  font-size: 0.8rem;
+}
+
+/* Feedback / retroalimentação */
+.stats-oraculo {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: -6px 0 12px 0;
+  text-align: center;
+}
+.feedback-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0,0,0,0.05);
+  font-size: 0.78rem;
+}
+.feedback-label {
+  flex: 1;
+  color: var(--text-muted);
+}
+.btn-feedback {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+.btn-feedback:active {
+  transform: scale(0.9);
+  background: rgba(0,0,0,0.06);
+}
+.feedback-obrigado {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
 </style>
 </head>
 <body>
@@ -596,7 +725,6 @@
   <header class="app-header" style="padding: 12px 15px 8px 15px; border-bottom: 1px solid rgba(0,0,0,0.05);">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
       
-      <!-- Lado Esquerdo: Título e Botão de Voz -->
       <div style="display: flex; align-items: center; gap: 8px;">
         <h1 class="app-title" style="margin: 0; font-size: 1.25rem;">Oráculo</h1>
         <button id="btnToggleVoz" class="icon-btn" aria-label="Ativar Voz" style="background:rgba(0,0,0,0.06); color:#333; border-radius:8px; padding: 6px; transition: 0.3s;">
@@ -604,14 +732,12 @@
         </button>
       </div>
 
-      <!-- Lado Direito: Número do Arquivo em um "chip" -->
       <span class="case-no" style="margin: 0; font-size: 0.75rem; background: rgba(0,0,0,0.05); padding: 4px 8px; border-radius: 12px; font-weight: bold;">
         ARQUIVO <span id="numeroArquivo">000</span>
       </span>
 
     </div>
 
-    <!-- Subtítulo menor, direto ao ponto e com espaçamento reduzido -->
     <p class="app-subtitle" style="margin: 0; font-size: 0.75rem; line-height: 1.3;">
       Descreva os fatos e descubra as causas mais prováveis.
     </p>
@@ -619,7 +745,6 @@
 
   <main class="app-main" id="appMain">
 
-    <!-- ===== TAB: CONSULTAR ===== -->
     <section id="tab-consultar" class="tab-panel active">
       <div class="card">
         <div class="card-body">
@@ -631,14 +756,12 @@
             
           </div>
 
-          <!-- Painel Explorador com o botão Limpar embutido no título -->
           <details class="config-group" id="painelExplorador" style="margin-top: 15px; margin-bottom: 0;">
             <summary style="display:flex; justify-content:space-between; align-items:center;flex-direction: row-reverse;">
               <span class="seta">▼</span>
               <span>🕵️ Explorar Pistas Rápidas</span>
               
               <div style="display:flex; gap:12px; align-items:center;">
-                <!-- O botão da vassoura (Limpar) -->
                 <button id="btnLimparBuscaInterno" class="btn-link" style="color:var(--danger); padding:0; font-size:0.8rem; margin-right: 9vw;" aria-label="Limpar Pesquisa">
                   Limpar
                 </button>
@@ -646,8 +769,7 @@
               </div>
             </summary>
             <div class="card-body" id="areaExploradorBody">
-              <!-- Categorias e Tags aparecerão aqui -->
-            </div>
+              </div>
           </details>
         </div>
       </div>
@@ -655,7 +777,6 @@
       <div id="areaConsulta" style="max-height: 36vh; overflow-y: auto;"></div>
     </section>
 
-    <!-- ===== TAB: NOVO REGISTRO ===== -->
     <section id="tab-novo" class="tab-panel">
       <div id="editBanner" class="edit-banner hidden">
         <span>Editando um registro existente</span>
@@ -689,7 +810,6 @@
       </p>
     </section>
 
-    <!-- ===== TAB: ARQUIVO ===== -->
     <section id="tab-arquivo" class="tab-panel">
       <div class="stats-bar">
         <div class="stat-box"><div class="n" id="statTotalRegistros">0</div><div class="l">registros</div></div>
@@ -724,14 +844,34 @@
         <button id="btnLimparTudo" class="btn btn-danger btn-small">Apagar todos os registros</button>
       </div>
     </section>
-    <!-- ===== TAB: CONFIGURAÇÕES ===== -->
     <section id="tab-config" class="tab-panel">
       
       <p style="font-size:0.85rem; color:var(--text-muted); text-align:center; margin-bottom:15px;">
         Toque nos painéis abaixo para expandir e ajustar o motor do Oráculo.
       </p>
+      <!-- 2.8 Curiosidade do Oráculo -->
+      <details class="config-group">
+        <summary>
+          <span>🔮 Curiosidade do Oráculo</span>
+          <div style="display:flex; gap:12px; align-items:center;">
+            <button id="btnResetCuriosidade" class="btn-link" style="color:var(--danger); font-size:0.75rem; padding:0;">Restaurar</button>
+            <span class="seta">▼</span>
+          </div>
+        </summary>
+        <div class="card-body">
+          <label class="field-label">GATILHO DE DÚVIDA (<span id="valLimiarDuvida">60</span>%)</label>
+          <input type="range" id="rangeLimiarDuvida" min="0" max="100" step="1" value="60" style="width:100%; margin-bottom:15px;">
+          <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:20px;">
+            O Oráculo pergunta se a certeza principal dele for menor que este valor. (Deixe em 0 para desativar).
+          </p>
 
-      <!-- 1. Pesos Base e Booleanos -->
+          <label class="field-label">GATILHO DE COBERTURA (<span id="valLimiarCobertura">40</span>%)</label>
+          <input type="range" id="rangeLimiarCobertura" min="0" max="100" step="1" value="40" style="width:100%;">
+          <p style="font-size:0.75rem; color:var(--text-muted); margin-top:5px; margin-bottom:0;">
+            O Oráculo também pergunta se a dedução atingir poucos indícios (cobertura fraca).
+          </p>
+        </div>
+      </details>
       <details class="config-group">
         <summary>
           <span>🎛️ Sensibilidade Base</span>
@@ -754,8 +894,27 @@
           <input type="range" id="rangePunicaoMenos" min="-50" max="-2" step="1" value="-10" style="width:100%;">
         </div>
       </details>
+      
+      <details class="config-group">
+        <summary>
+          <span>⚖️ Peso do Feedback (Votos)</span>
+          <div style="display:flex; gap:12px; align-items:center;">
+            <button id="btnResetVotos" class="btn-link" style="color:var(--danger); font-size:0.75rem; padding:0;">Restaurar</button>
+            <span class="seta">▼</span>
+          </div>
+        </summary>
+        <div class="card-body">
+          <label class="field-label">FORÇA DO VOTO POSITIVO (👍) (<span id="valPesoVotoPositivo">3</span>x)</label>
+          <input type="range" id="rangeVotoPositivo" min="0" max="10" step="0.5" value="3" style="width:100%; margin-bottom:15px;">
 
-      <!-- 2. Motores Avançados -->
+          <label class="field-label">FORÇA DO VOTO NEGATIVO (👎) (<span id="valPesoVotoNegativo">3</span>x)</label>
+          <input type="range" id="rangeVotoNegativo" min="0" max="10" step="0.5" value="3" style="width:100%;">
+          <p style="font-size:0.75rem; color:var(--text-muted); margin-top:10px; margin-bottom:0;">
+            Ajusta o peso do saldo nas suas exportações e o impacto do feedback na dedução final.
+          </p>
+        </div>
+      </details>
+
       <details class="config-group">
         <summary>
           <span>🧠 Motores Avançados (Forense)</span>
@@ -775,7 +934,6 @@
             <input type="checkbox" id="checkIDF" style="width:18px; height:18px; accent-color:var(--primary);">
             ATIVAR BM25 / IDF (Raridade)
           </label>
-          <!-- O NOVO INTERRUPTOR FUZZY -->
           <label class="field-label" style="display:flex; align-items:center; gap:10px; cursor:pointer; margin-top: 15px;">
             <input type="checkbox" id="checkFuzzy" style="width:18px; height:18px; accent-color:var(--primary);">
             ATIVAR CORRETOR FUZZY (Erros de Digitação)
@@ -786,7 +944,23 @@
         </div>
       </details>
 
-      <!-- 3. Stopwords -->
+      <details class="config-group">
+        <summary>
+          <span>🔊 Voz do Oráculo</span>
+          <div style="display:flex; gap:12px; align-items:center;">
+            <button id="btnResetVoz" class="btn-link" style="color:var(--danger); font-size:0.75rem; padding:0;">Restaurar</button>
+            <span class="seta">▼</span>
+          </div>
+        </summary>
+        <div class="card-body">
+          <label class="field-label">VELOCIDADE DE LEITURA (<span id="valVelocidadeLeitura">1.1x</span>)</label>
+          <input type="range" id="rangeVelocidade" min="0.5" max="2" step="0.1" value="1.1" style="width:100%;">
+          <p style="font-size:0.75rem; color:var(--text-muted); margin-top:5px; margin-bottom:0;">
+            Ajusta a rapidez com que o Oráculo narra os resultados em voz alta.
+          </p>
+        </div>
+      </details>
+
       <details class="config-group">
         <summary>
           <span>🛑 Palavras Ignoradas</span>
@@ -804,7 +978,6 @@
         </div>
       </details>
 
-      <!-- 4. Sinônimos -->
       <details class="config-group">
         <summary>
           <span>🔗 Dicionário de Sinônimos</span>
@@ -825,7 +998,6 @@
         </div>
       </details>
 
-      <!-- 5. Gerenciamento de Arquivos -->
       <details class="config-group">
         <summary><span>💾 Exportar / Importar Regras</span> <span class="seta">▼</span></summary>
         <div class="card-body">
@@ -874,7 +1046,6 @@
     </div>
   </div>
 </div>
-<!-- ===== MODAL DE EXPORTAÇÃO SELETIVA ===== -->
 <div id="modalExportOverlay" class="modal-overlay hidden">
   <div class="modal">
     <h3 style="margin-top:0; margin-bottom:15px; font-size:1.1rem; color:var(--primary);">Exportar Cartucho</h3>
@@ -887,7 +1058,6 @@
       <button id="btnToggleCategorias" class="btn-link" style="font-size:0.8rem;">Desmarcar Todas</button>
     </div>
     
-    <!-- A lista de checkboxes será injetada aqui -->
     <div id="listaCategoriasExport" class="export-list"></div>
 
     <div class="modal-actions" style="margin-top: 20px;">
@@ -907,12 +1077,16 @@ var db = null;
 
 function abrirDB(){
   return new Promise(function(resolve, reject){
-    var req = indexedDB.open('OraculoDedutivoDB', 1);
+    var req = indexedDB.open('OraculoDedutivoDB', 2); // versão 1 -> 2
     req.onupgradeneeded = function(e){
       var database = e.target.result;
       if (!database.objectStoreNames.contains('casos')){
         var store = database.createObjectStore('casos', { keyPath:'id', autoIncrement:true });
         store.createIndex('causa','causa',{ unique:false });
+      }
+      if (!database.objectStoreNames.contains('feedback')){
+        var storeFeedback = database.createObjectStore('feedback', { keyPath:'id', autoIncrement:true });
+        storeFeedback.createIndex('causaChave','causaChave',{ unique:false });
       }
     };
     req.onsuccess = function(e){ db = e.target.result; resolve(db); };
@@ -964,6 +1138,23 @@ function clearAllCasosDB(){
     req.onerror = function(e){ reject(e.target.error); };
   });
 }
+function addFeedback(fb){
+  return new Promise(function(resolve, reject){
+    var tx = db.transaction('feedback','readwrite');
+    var req = tx.objectStore('feedback').add(fb);
+    req.onsuccess = function(){ resolve(req.result); };
+    req.onerror = function(e){ reject(e.target.error); };
+  });
+}
+
+function getAllFeedback(){
+  return new Promise(function(resolve, reject){
+    var tx = db.transaction('feedback','readonly');
+    var req = tx.objectStore('feedback').getAll();
+    req.onsuccess = function(){ resolve(req.result); };
+    req.onerror = function(e){ reject(e.target.error); };
+  });
+}
 /* =========================================================
    Gerenciador de Configurações (Ajustes do Oráculo)
    ========================================================= */
@@ -975,6 +1166,11 @@ var configPadrao = {
   pesoJaccard: 2.0, // <-- NOVO CONTROLE JACCARD
   ativarIDF: true,
   ativarFuzzy: true, // <-- NOVO CONTROLE FUZZY
+  velocidadeLeitura: 1.1, // <-- NOVO VELOCIDADE ÁUDIO
+  pesoVotoPositivo: 3.0, // <-- NOVO PESO DE VOTOS 👍
+  pesoVotoNegativo: 3.0, // <-- NOVO PESO DE VOTOS 👎
+  limiarDuvida: 60,      // <-- NOVO: % que dispara a pergunta de dúvida
+  limiarCobertura: 40,   // <-- NOVO: % que dispara a pergunta de cobertura
   stopwords: ['a','o','as','os','um','uma','de','do','da','em','no','na','por','pra','para','com','e','ou','que','é','foi','ser','esta','este','isso','como','mais','muito','já','só','até','entre','sobre','depois','antes','quando','onde','porque','mas','então','assim','cada','todo','seu','sua','meu','minha','eu','ele','ela','nós','você','lhe','me','se','está','tem','há'],
   sinonimos: [
     // Exemplo inicial: mapeia uma frase para um termo de peso único
@@ -995,6 +1191,12 @@ function salvarConfig() {
 if(config.pesoJaccard === undefined) config.pesoJaccard = configPadrao.pesoJaccard;
 if(config.ativarIDF === undefined) config.ativarIDF = configPadrao.ativarIDF;
 if(config.ativarFuzzy === undefined) config.ativarFuzzy = configPadrao.ativarFuzzy; // <-- PREVINE QUEBRA
+if(config.velocidadeLeitura === undefined) config.velocidadeLeitura = configPadrao.velocidadeLeitura;
+if(config.pesoVotoPositivo === undefined) config.pesoVotoPositivo = configPadrao.pesoVotoPositivo;
+if(config.pesoVotoNegativo === undefined) config.pesoVotoNegativo = configPadrao.pesoVotoNegativo;
+if(config.limiarDuvida === undefined) config.limiarDuvida = configPadrao.limiarDuvida; // <-- NOVO
+if(config.limiarCobertura === undefined) config.limiarCobertura = configPadrao.limiarCobertura; // <-- NOVO
+
 // === UI: Controle de Pesos ===
 $('rangePalavra').value = config.pesoPalavra;
 $('valPesoPalavra').textContent = config.pesoPalavra;
@@ -1011,8 +1213,41 @@ $('rangeBigrama').addEventListener('input', function(e){
   $('valPesoBigrama').textContent = config.pesoBigrama;
   salvarConfig();
 });
+
+// === UI: Controle de Votos (NOVO) ===
+$('rangeVotoPositivo').value = config.pesoVotoPositivo;
+$('valPesoVotoPositivo').textContent = config.pesoVotoPositivo;
+$('rangeVotoPositivo').addEventListener('input', function(e){
+  config.pesoVotoPositivo = parseFloat(e.target.value);
+  $('valPesoVotoPositivo').textContent = config.pesoVotoPositivo;
+  salvarConfig();
+});
+
+$('rangeVotoNegativo').value = config.pesoVotoNegativo;
+$('valPesoVotoNegativo').textContent = config.pesoVotoNegativo;
+$('rangeVotoNegativo').addEventListener('input', function(e){
+  config.pesoVotoNegativo = parseFloat(e.target.value);
+  $('valPesoVotoNegativo').textContent = config.pesoVotoNegativo;
+  salvarConfig();
+});
+
+$('btnResetVotos').addEventListener('click', function(e){
+  e.stopPropagation();
+  confirmar('Restaurar o peso dos votos para o padrão?').then(function(ok){
+    if(ok) {
+      config.pesoVotoPositivo = configPadrao.pesoVotoPositivo;
+      config.pesoVotoNegativo = configPadrao.pesoVotoNegativo;
+      salvarConfig();
+      $('rangeVotoPositivo').value = config.pesoVotoPositivo;
+      $('valPesoVotoPositivo').textContent = config.pesoVotoPositivo;
+      $('rangeVotoNegativo').value = config.pesoVotoNegativo;
+      $('valPesoVotoNegativo').textContent = config.pesoVotoNegativo;
+      toast('Pesos dos votos restaurados.');
+    }
+  });
+});
+
 // === UI: Controles Booleanos ===
-// Garante que o valor existe caso esteja carregando um config antigo salvo no localStorage
 if(config.multiplicadorMais === undefined) config.multiplicadorMais = configPadrao.multiplicadorMais;
 if(config.punicaoMenos === undefined) config.punicaoMenos = configPadrao.punicaoMenos;
 
@@ -1050,6 +1285,59 @@ $('checkFuzzy').addEventListener('change', function(e){
   config.ativarFuzzy = e.target.checked;
   salvarConfig();
   toast(config.ativarFuzzy ? 'Corretor Fuzzy ativado.' : 'Corretor Fuzzy desativado.');
+});
+// === UI: Velocidade de Leitura (Voz) ===
+$('rangeVelocidade').value = config.velocidadeLeitura;
+$('valVelocidadeLeitura').textContent = config.velocidadeLeitura.toFixed(1) + 'x';
+$('rangeVelocidade').addEventListener('input', function(e){
+  config.velocidadeLeitura = parseFloat(e.target.value);
+  $('valVelocidadeLeitura').textContent = config.velocidadeLeitura.toFixed(1) + 'x';
+  salvarConfig();
+});
+
+$('btnResetVoz').addEventListener('click', function(e){
+  e.stopPropagation();
+  confirmar('Restaurar a velocidade de leitura para o padrão?').then(function(ok){
+    if(ok) {
+      config.velocidadeLeitura = configPadrao.velocidadeLeitura;
+      salvarConfig();
+      $('rangeVelocidade').value = config.velocidadeLeitura;
+      $('valVelocidadeLeitura').textContent = config.velocidadeLeitura.toFixed(1) + 'x';
+      toast('Velocidade de leitura restaurada.');
+    }
+  });
+});
+// === UI: Curiosidade do Oráculo (Perguntas) ===
+$('rangeLimiarDuvida').value = config.limiarDuvida;
+$('valLimiarDuvida').textContent = config.limiarDuvida;
+$('rangeLimiarDuvida').addEventListener('input', function(e){
+  config.limiarDuvida = parseInt(e.target.value, 10);
+  $('valLimiarDuvida').textContent = config.limiarDuvida;
+  salvarConfig();
+});
+
+$('rangeLimiarCobertura').value = config.limiarCobertura;
+$('valLimiarCobertura').textContent = config.limiarCobertura;
+$('rangeLimiarCobertura').addEventListener('input', function(e){
+  config.limiarCobertura = parseInt(e.target.value, 10);
+  $('valLimiarCobertura').textContent = config.limiarCobertura;
+  salvarConfig();
+});
+
+$('btnResetCuriosidade').addEventListener('click', function(e){
+  e.stopPropagation();
+  confirmar('Restaurar a curiosidade do Oráculo para o padrão?').then(function(ok){
+    if(ok) {
+      config.limiarDuvida = configPadrao.limiarDuvida;
+      config.limiarCobertura = configPadrao.limiarCobertura;
+      salvarConfig();
+      $('rangeLimiarDuvida').value = config.limiarDuvida;
+      $('valLimiarDuvida').textContent = config.limiarDuvida;
+      $('rangeLimiarCobertura').value = config.limiarCobertura;
+      $('valLimiarCobertura').textContent = config.limiarCobertura;
+      toast('Curiosidade do Oráculo restaurada.');
+    }
+  });
 });
 // === UI: Stopwords (Balõezinhos) ===
 function renderStopwords() {
@@ -1134,8 +1422,15 @@ $('btnRestaurarConfig').addEventListener('click', function(){
       $('valMultiplicadorMais').textContent = config.multiplicadorMais;
       $('rangeJaccard').value = config.pesoJaccard;
       $('valPesoJaccard').textContent = config.pesoJaccard;
-      // Aqui está o IDF (ele atualiza a caixinha de marcar na tela)
+      $('rangeVotoPositivo').value = config.pesoVotoPositivo;
+      $('valPesoVotoPositivo').textContent = config.pesoVotoPositivo;
+      $('rangeVotoNegativo').value = config.pesoVotoNegativo;
+      $('valPesoVotoNegativo').textContent = config.pesoVotoNegativo;
       $('checkIDF').checked = config.ativarIDF;
+      $('rangeVelocidade').value = config.velocidadeLeitura;
+      $('valVelocidadeLeitura').textContent = config.velocidadeLeitura.toFixed(1) + 'x';
+      $('rangeLimiarCobertura').value = config.limiarCobertura;
+      $('valLimiarCobertura').textContent = config.limiarCobertura;
       renderStopwords();
       renderSinonimos();
       toast('Ajustes restaurados.');
@@ -1274,6 +1569,13 @@ $('inputImportarConfig').addEventListener('change', function(e){
         $('valPesoPalavra').textContent = config.pesoPalavra;
         $('rangeBigrama').value = config.pesoBigrama;
         $('valPesoBigrama').textContent = config.pesoBigrama;
+        
+        // Se a importação não tiver pesos de voto salvos (configs antigas), usa padrão
+        $('rangeVotoPositivo').value = config.pesoVotoPositivo || 3;
+        $('valPesoVotoPositivo').textContent = config.pesoVotoPositivo || 3;
+        $('rangeVotoNegativo').value = config.pesoVotoNegativo || 3;
+        $('valPesoVotoNegativo').textContent = config.pesoVotoNegativo || 3;
+
         renderStopwords();
         renderSinonimos();
         
@@ -1304,21 +1606,6 @@ var STOPWORDS = new Set([
   'esses','essas','está','estão','estava','estavam','ser','sendo','tem','têm','tinha','há','ter'
 ]);
 
-// Pesos ajustáveis: quanto uma palavra solta vs. um bigrama (par de palavras)
-// pesa no cálculo. Suba PESO_BIGRAMA para priorizar frases exatas; abaixe para
-// depender mais de palavras isoladas.
-
-/* =========================================================
-   Processamento de texto — normalização, stopwords, bigramas
-   ========================================================= */
-function normalizar(texto){
-  return String(texto || '')
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-    .replace(/[^a-z0-9\s_]/g,' ') // Nota: adicionei o underscore "_" aqui para preservar sinônimos como "falha_partida"
-    .replace(/\s+/g,' ')
-    .trim();
-}
 
 function aplicarSinonimos(texto) {
   var txt = normalizar(texto);
@@ -1461,10 +1748,7 @@ function treinarModelo(casos){
     classes[chave].contagem.forEach(function(_, token){ vocab.add(token); });
   });
 
-  // Peso de especificidade (estilo IDF): termos que aparecem em poucas causas
-  // pesam mais do que termos genéricos que aparecem em quase todas (ex.: "carro",
-  // "chave") — assim uma palavra rara e reveladora (ex.: "clique") tem mais
-  // influência que palavras comuns repetidas em várias causas.
+  // Peso de especificidade (estilo IDF)
   var numClasses = Object.keys(classes).length;
   var idf = new Map();
   vocab.forEach(function(token){
@@ -1476,6 +1760,41 @@ function treinarModelo(casos){
   });
 
   return { classes:classes, vocab:vocab, totalCasos:casos.length, numClasses:numClasses, idf:idf };
+}
+
+function reconstruirIndiceFeedback(){
+  feedbackPorCausa = {};
+  todosFeedbacks.forEach(function(fb){
+    if (!feedbackPorCausa[fb.causaChave]) feedbackPorCausa[fb.causaChave] = [];
+    feedbackPorCausa[fb.causaChave].push(fb);
+  });
+}
+
+function calcularBoostFeedback(chaveCausa, tokensQueryMap){
+  var registros = feedbackPorCausa[chaveCausa];
+  if (!registros || registros.length === 0) return 0;
+
+  var tokensAtuais = new Set(tokensQueryMap.keys());
+  if (tokensAtuais.size === 0) return 0;
+
+  var boostTotal = 0;
+  registros.forEach(function(fb){
+    var tokensAntigos = new Set(fb.tokens || []);
+    if (tokensAntigos.size === 0) return;
+
+    var intersecao = 0;
+    tokensAntigos.forEach(function(t){ if (tokensAtuais.has(t)) intersecao++; });
+    var uniao = new Set(Array.from(tokensAntigos).concat(Array.from(tokensAtuais))).size;
+    var similaridade = uniao > 0 ? (intersecao / uniao) : 0;
+
+    // A MÁGICA DOS PESOS AJUSTÁVEIS: Aplica os pesos que o usuário escolheu no painel
+    if (similaridade >= 0.25) {
+      var forcaVoto = (fb.tipo === 'acerto') ? config.pesoVotoPositivo : -config.pesoVotoNegativo;
+      boostTotal += forcaVoto * similaridade;
+    }
+  });
+
+  return boostTotal;
 }
 /* =========================================================
    Distância de Levenshtein (Lógica Fuzzy)
@@ -1602,10 +1921,12 @@ function classificar(query, modelo){
     var uniao = (totalTermosNaCausa + totalTermosUnicosQuery) - termosDaCausaNoQuery;
     var jaccardIndex = uniao > 0 ? (termosDaCausaNoQuery / uniao) : 0;
     
-    // AQUI ESTÁ A MUDANÇA DO JACCARD LIGADA À ENGRENAGEM:
-    // Ele multiplica o índice de pureza pelo valor que você definiu no slider do Jaccard
+    // Multiplica o índice de pureza pelo valor que você definiu no slider do Jaccard
     logScore += (jaccardIndex * config.pesoJaccard);
-
+    
+    // 3.5 Boost de Aprendizado por Feedback (confirmações que você já deu ao Oráculo)
+    logScore += calcularBoostFeedback(chave, tokensBrutosQuery);
+    
     // 4. Monta a lista visual de "Pistas Confirmadas"
     var termosCombinados = Array.from(tokensComIDF.keys())
       .filter(function(t){ return (cls.contagem.get(t) || 0) > 0 && tokensComIDF.get(t) > 0; })
@@ -1661,6 +1982,8 @@ function badgeCategoriaHtml(nome){
    Estado / cache
    ========================================================= */
 var todosCasos = [];
+var todosFeedbacks = [];
+var feedbackPorCausa = {};
 var editandoId = null;
 var modeloTreinadoCache = null; // <-- O NOVO CÉREBRO EM CACHE
 
@@ -1723,21 +2046,8 @@ function mudarAba(nome){
 /* =========================================================
    Consulta / dedução
    ========================================================= */
-var MENSAGENS_CARREGANDO = [
-  'Cruzando os fatos com o arquivo...',
-  'Separando palavras e bigramas...',
-  'Comparando com registros conhecidos...',
-  'Calculando probabilidades...'
-];
 
-var MENSAGENS_CARREGANDO = [
-  'Cruzando os fatos com o arquivo...',
-  'Separando palavras e bigramas...',
-  'Comparando com registros conhecidos...',
-  'Calculando probabilidades...'
-];
-
-$('btnConsultar').addEventListener('click', function(){
+function executarConsulta(){
   var texto = $('queryInput').value.trim();
   var area = $('areaConsulta');
   
@@ -1764,22 +2074,142 @@ $('btnConsultar').addEventListener('click', function(){
     return;
   }
 
-  // Se por algum motivo bizarro o cache sumiu, ele recria na hora (segurança)
   if (!modeloTreinadoCache) {
     modeloTreinadoCache = treinarModelo(todosCasos);
   }
 
-  // A MÁGICA DO NITRO: A dedução agora é instantânea. Sem setTimeout.
   var resultados = classificar(texto, modeloTreinadoCache);
-  renderResultados(resultados);
-});
+  renderResultados(resultados, texto);
+}
+
+$('btnConsultar').addEventListener('click', executarConsulta);
+
 function tierDe(pct){
   if (pct >= 55) return 'tier-alta';
   if (pct >= 25) return 'tier-media';
   return 'tier-baixa';
 }
+/* =========================================================
+   Transparência Forense — mostra quais palavras contribuíram
+   ========================================================= */
+function analisarPistasVisuais(textoOriginal, resultadoPrincipal){
+  var termosPrincipais = new Set();
+  if (resultadoPrincipal && resultadoPrincipal.termos) {
+    resultadoPrincipal.termos.forEach(function(t){
+      t.split('_').forEach(function(parte){ if (parte) termosPrincipais.add(parte); });
+    });
+  }
 
-function renderResultados(resultados){
+  var pedacos = String(textoOriginal || '').split(/(\s+)/);
+
+  return pedacos.map(function(pedaco){
+    if (pedaco === '' || /^\s+$/.test(pedaco)) {
+      return { texto: pedaco, tipo: 'espaco' };
+    }
+
+    var vetada = /^-/.test(pedaco);
+    var obrigatoria = /^\+/.test(pedaco);
+    var semSinal = pedaco.replace(/^[\+\-]/, '');
+    var semPontuacao = semSinal.replace(/[,.\!\?;:]+$/, '');
+    var norm = normalizar(semPontuacao);
+
+    var tipo = 'neutra';
+    if (vetada) tipo = 'vetada';
+    else if (obrigatoria) tipo = 'obrigatoria';
+    else if (norm && termosPrincipais.has(norm)) tipo = 'confirmada';
+
+    return { texto: pedaco, tipo: tipo };
+  });
+}
+
+function renderPistasVisuaisHtml(pedacos, textoStats){
+  var partes = pedacos.map(function(p){
+    if (p.tipo === 'espaco') return p.texto;
+    return '<span class="pista-' + p.tipo + '">' + escapeHtml(p.texto) + '</span>';
+  }).join('');
+
+  return (
+    // BARRA COMPACTA
+    '<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.04); padding:0px 15px; border-radius:8px; margin-bottom:12px;">' +
+      '<div style="font-size:0.85rem; display:flex; align-items:center; gap:8px;">' +
+        '<strong style="color:var(--primary); margin:0;">VEREDICTO</strong>' +
+        '<span style="color:var(--text-muted); font-size:0.75rem; border-left:1px solid rgba(0,0,0,0.1); padding-left:8px;" id="statsOraculoTexto">' + textoStats + '</span>' +
+      '</div>' +
+      '<button type="button" class="btn-ajuda-legenda" aria-label="Mostrar análise" style="background:none; border:none; padding:0; font-size:1.2rem; cursor:pointer; transition:0.3s;">💡</button>' +
+    '</div>' +
+
+    // GAVETA ESCONDIDA (Usando display: none inline para garantir que vai esconder)
+    '<div id="painelPistas" style="display:none; margin-top:-4px; margin-bottom:15px; background:rgba(0,0,0,0.02); padding:12px; border-radius:8px; border:1px dashed rgba(0,0,0,0.1);">' +
+      '<p class="pistas-titulo" style="margin-top:0; margin-bottom:8px; font-size:0.8rem; font-weight:bold;">🔍 Como o Oráculo leu seus fatos</p>' +
+      '<p class="pistas-texto" style="margin-bottom:12px;">' + partes + '</p>' +
+      '<div class="pistas-legenda" style="display:flex; gap:10px; flex-wrap:wrap; font-size:0.75rem;">' +
+        '<span><i class="dot confirmada"></i>Confirmou</span>' +
+        '<span><i class="dot obrigatoria"></i>Obrigatória (+)</span>' +
+        '<span><i class="dot vetada"></i>Veto (-)</span>' +
+      '</div>' +
+    '</div>'
+  );
+}
+/* =========================================================
+   O Oráculo pergunta de volta — sugere uma pista ainda não usada
+   ========================================================= */
+function sugerirPerguntaDeVolta(resultadoTop, textoQuery){
+  if (!resultadoTop || !modeloTreinadoCache) return null;
+  var chaveAlvo = normalizarChaveCausa(resultadoTop.nome);
+  var cls = modeloTreinadoCache.classes[chaveAlvo];
+  if (!cls) return null;
+
+  var candidatas = new Set();
+
+  // 1. Tenta usar as TAGS cadastradas (prioridade máxima)
+  todosCasos.forEach(function(c){
+    if (normalizarChaveCausa(c.causa) === chaveAlvo && c.tags) {
+      c.tags.forEach(function(t){ if(t) candidatas.add(t); });
+    }
+  });
+
+  // 2. O SEGREDO NOVO: Se você não cadastrou Tags, o Oráculo varre a base 
+  // e pega as palavras mais importantes que você arquivou nesta causa!
+  if (candidatas.size === 0) {
+     var termosOrdenados = Array.from(cls.contagem.entries())
+        .filter(function(a) { return a[0].indexOf('_') === -1 && a[0].length > 3; }) // só palavras maiores que 3 letras
+        .sort(function(a,b){ return b[1] - a[1]; }); // Ordena pelas mais pesadas/importantes
+     
+     // Pega o top 5 de palavras vitais
+     termosOrdenados.slice(0, 5).forEach(function(t) {
+        candidatas.add(t[0]);
+     });
+  }
+
+  var textoMin = normalizar(textoQuery);
+  var validas = Array.from(candidatas).filter(function(tag){
+    var tagNorm = normalizar(tag.replace(/_/g, ' '));
+    // Só deixa sugerir a palavra se ela AINDA NÃO foi digitada na busca atual
+    return tagNorm && textoMin.indexOf(tagNorm) === -1;
+  });
+
+  if (validas.length === 0) return null;
+  
+  // Escolhe uma palavra aleatória dentro as sugestões válidas
+  return validas[Math.floor(Math.random() * validas.length)].replace(/_/g, ' ');
+}
+/* =========================================================
+   Feedback — retroalimenta a lenda do Oráculo
+   ========================================================= */
+var statsFeedback = JSON.parse(localStorage.getItem('OraculoFeedbackStats')) || { acertos: 0, erros: 0 };
+
+function textoStatsFeedback(){
+  var acertos = 0, erros = 0;
+  todosFeedbacks.forEach(function(fb){
+    if (fb.tipo === 'acerto') acertos++; else erros++;
+  });
+  var total = acertos + erros;
+  if (total === 0) return 'Sem avaliações';
+  var pct = Math.round((acertos / total) * 100);
+  return 'Acertos: ' + pct + '% (' + total + ' aval.)';
+}
+
+function renderResultados(resultados, textoOriginal){
   var area = $('areaConsulta');
   if (!resultados.length){
     area.innerHTML = '<div class="empty-state"><p>O Oráculo silencia. Nenhum termo da descrição bate com os arquivos.<br>Reformule a busca ou cadastre esta situação inédita.</p></div>';
@@ -1787,80 +2217,205 @@ function renderResultados(resultados){
   }
 
   var top5 = resultados.slice(0, 5);
-  var html = '<p class="resultado-intro">VEREDICTO DO ORÁCULO</p>';
+  
+  // AQUI MUDA: Chamamos a barra compactada enviando os pedaços e o texto das estatísticas
+  var html = renderPistasVisuaisHtml(analisarPistasVisuais(textoOriginal || '', top5[0]), textoStatsFeedback());
 
-  textosDosCards = []; // Zera a memória de voz
+  textosDosCards.resultados = [];
 
   top5.forEach(function(r, i){
     var pct = Math.round(r.probabilidade * 100);
     var tier = tierDe(pct);
     var rotulo = i === 0 ? 'HIPÓTESE PRINCIPAL' : ('HIPÓTESE ' + (i+1));
+    var chaveCausaAtual = normalizarChaveCausa(r.nome);
+    
+    // --- LÓGICA DE VOTACÃO: Calcula o saldo da causa para exibir na tela ---
+    var casosDestaCausa = todosCasos.filter(function(c){ return normalizarChaveCausa(c.causa) === chaveCausaAtual; });
+    var vp = 0, vn = 0;
+    if(casosDestaCausa.length > 0){
+        vp = Math.max.apply(null, casosDestaCausa.map(function(c){ return c.votosPositivos || 0; }));
+        vn = Math.max.apply(null, casosDestaCausa.map(function(c){ return c.votosNegativos || 0; }));
+    }
+    
+    var saldo = (vp * config.pesoVotoPositivo) - (vn * config.pesoVotoNegativo);
+    var badgeVotoHtml = '';
+    if (saldo > 0) {
+        badgeVotoHtml = '<span style="color:#28a745; font-weight:bold; font-size:0.95rem; margin-left:10px;">👍 +' + saldo.toFixed(1).replace('.0','') + '</span>';
+    } else if (saldo < 0) {
+        badgeVotoHtml = '<span style="color:#dc3545; font-weight:bold; font-size:0.95rem; margin-left:10px;">👎 ' + saldo.toFixed(1).replace('.0','') + '</span>';
+    } else if (vp > 0 || vn > 0) {
+        badgeVotoHtml = '<span style="color:var(--text-muted); font-weight:bold; font-size:0.85rem; margin-left:10px;">⚖️ 0</span>';
+    }
+    // -------------------------------------------------------------------------
+
     var chips = r.termos.map(function(t){
       return '<span class="chip">' + escapeHtml(t.replace(/_/g,' ')) + '</span>';
     }).join('');
 
-    // Prepara o texto limpo para o Robô ler
     var fraseLida = rotulo + ". " + pct + "% de chance. " + r.nome + ". ";
     if (r.detalhes) fraseLida += "Solução: " + r.detalhes + ". ";
-    textosDosCards.push(fraseLida);
+    textosDosCards.resultados.push({ texto: fraseLida, principal: (i === 0) });
 
-    // Preparando um texto limpo para o WhatsApp (sem HTML)
     var textoCopia = "🔍 *Oráculo Dedutivo*\n\n" + 
                      "Fato: *" + r.nome + "* (" + pct + "% de probabilidade)\n" +
                      (r.detalhes ? "\n💡 *Solução / Notas:*\n" + r.detalhes : "");
                      
     var encodeCopia = encodeURIComponent(textoCopia);
 
-    // O Card agora recebe a classe tocavel e onclick="tocarCard(i)"
     html +=
-      '<div class="result-card tocavel ' + tier + '" onclick="tocarCard(' + i + ')">' +
+      '<div class="result-card tocavel ' + tier + '" onclick="tocarCard(\'resultados\', ' + i + ')">' +
         '<div class="stamp-circle"><span class="num">' + pct + '</span><span class="pct">%</span></div>' +
         '<div class="result-main">' +
-          '<div class="result-rank">' + rotulo + '</div>' +
+          
+          '<div class="result-rank" style="display:flex; justify-content:space-between; align-items:center;">' +
+             '<span>' + rotulo + '</span>' + badgeVotoHtml +
+          '</div>' +
+          
           '<div class="result-nome">' + escapeHtml(r.nome) + '</div>' +
           (r.categoria ? '<div style="margin-top:4px;">' + badgeCategoriaHtml(r.categoria) + '</div>' : '') +
           '<div class="result-meta">' + r.cobertura + '% dos indícios confirmados · Base: ' + r.numExemplos + ' registro' + (r.numExemplos>1?'s':'') + '</div>' +
           (chips ? '<div class="chip-row">' + chips + '</div>' : '') +
           (r.detalhes ? '<div class="detalhes-texto" id="detalhes-' + i + '">' + escapeHtml(r.detalhes) + '</div>' : '') +
           
-          '<div style="display:flex; gap:8px; margin-top:12px; border-top:1px solid rgba(0,0,0,0.05); padding-top:12px;align-items: baseline;">' +
+          '<div style="display:flex; gap:8px; margin-top:2px; border-top:1px solid rgba(0,0,0,0.05); padding-top:1px;align-items: baseline;">' +
              (r.detalhes ? '<button class="btn-link detalhes-toggle" data-idx="' + i + '" style="flex:1; text-align:center;">Ver detalhes</button>' : '') +
              '<button class="btn-link btn-copy" data-copy="' + encodeCopia + '" style="flex:1; text-align:center;">📋 Copiar Resposta</button>' +
+          '</div>' +
+
+          '<div class="feedback-row" data-fb-idx="' + i + '">' +
+            '<span class="feedback-label">O Oráculo acertou?</span>' +
+            '<button class="btn-feedback" data-feedback="acerto" data-fb-idx="' + i + '" data-causa-chave="' + escapeHtml(chaveCausaAtual) + '" aria-label="Acertou">👍</button>' +
+            '<button class="btn-feedback" data-feedback="erro" data-fb-idx="' + i + '" data-causa-chave="' + escapeHtml(chaveCausaAtual) + '" aria-label="Errou">👎</button>' +
           '</div>' +
         '</div>' +
       '</div>';
   });
 
-  if (top5[0].probabilidade < 0.34 || top5[0].cobertura < 20){
+// AQUI MUDA: O Oráculo agora consulta os sliders que você salvou em Ajustes!
+  var certezaEmPorcentagem = top5[0].probabilidade * 100;
+
+  if (certezaEmPorcentagem < config.limiarDuvida || top5[0].cobertura < config.limiarCobertura){
     html += '<div class="aviso-confianca">Aviso: Os indícios são fracos. O Oráculo sugere detalhar melhor os sintomas ou ampliar a base de dados.</div>';
+
+    var perguntaSugerida = sugerirPerguntaDeVolta(top5[0], textoOriginal || '');
+    if (perguntaSugerida) {
+      html += '<div class="pergunta-oraculo">' +
+        '<p>🔮 O Oráculo sussurra: isso também está acontecendo com <strong>' + escapeHtml(perguntaSugerida) + '</strong>?</p>' +
+        '<button class="btn-link btn-responder-oraculo" data-tag="' + escapeHtml(perguntaSugerida) + '">Sim, adicionar aos fatos</button>' +
+      '</div>';
+    }
   }
 
   area.innerHTML = html;
-  
-  // Evento do botão de detalhes (para a voz ao abrir detalhes)
+
+// Lógica infalível da lâmpada (gaveta)
+  var btnAjudaLegenda = area.querySelector('.btn-ajuda-legenda');
+  if (btnAjudaLegenda) {
+    btnAjudaLegenda.addEventListener('click', function(e){
+      e.stopPropagation();
+      var painel = area.querySelector('#painelPistas');
+      if (painel) {
+        if (painel.style.display === 'none') {
+          painel.style.display = 'block';
+          btnAjudaLegenda.style.opacity = '0.5'; // Deixa o ícone apagadinho ao abrir
+        } else {
+          painel.style.display = 'none';
+          btnAjudaLegenda.style.opacity = '1';
+        }
+      }
+    });
+  }
+
   area.querySelectorAll('.detalhes-toggle').forEach(function(btn){
     btn.addEventListener('click', function(e){
-      e.stopPropagation(); // Evita que o card inicie a voz quando clica nos detalhes
-      if (synth && synth.speaking) synth.cancel(); // Cala a boca se estiver falando
+      e.stopPropagation();
+      if (synth && synth.speaking) synth.cancel();
       var alvo = $('detalhes-' + btn.getAttribute('data-idx'));
       var aberto = alvo.classList.toggle('show');
       btn.textContent = aberto ? 'Ocultar detalhes' : 'Ver detalhes';
     });
   });
 
-  // Evento infalível para cópia limpa
   area.querySelectorAll('.btn-copy').forEach(function(btn){
     btn.addEventListener('click', function(e){
-      e.stopPropagation(); // Evita conflitos com a voz ao copiar
+      e.stopPropagation();
       if (synth && synth.speaking) synth.cancel(); 
       var textoLimpo = decodeURIComponent(btn.getAttribute('data-copy'));
       navigator.clipboard.writeText(textoLimpo).then(function(){
-        toast('Copiado com sucesso para a área de transferência!');
+        toast('Copiado com sucesso!');
       }).catch(function(err){
         toast('Erro ao copiar. Seu navegador pode estar bloqueando.');
       });
     });
   });
+
+  area.querySelectorAll('.btn-feedback').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      if (synth && synth.speaking) synth.cancel();
+
+      var tipo = btn.getAttribute('data-feedback');
+      var chaveCausa = btn.getAttribute('data-causa-chave');
+      var idx = Number(btn.getAttribute('data-fb-idx'));
+      var resultadoRef = top5[idx];
+      var nomeCausa = resultadoRef ? resultadoRef.nome : '';
+
+      var tokensQueryAtual = Array.from(extrairTokens(textoOriginal || '').keys());
+
+      var registro = {
+        causaChave: chaveCausa,
+        causaNome: nomeCausa,
+        tipo: tipo,
+        tokens: tokensQueryAtual,
+        queryTexto: textoOriginal || '',
+        criadoEm: Date.now()
+      };
+
+      addFeedback(registro).then(function(){
+        todosFeedbacks.push(registro);
+        reconstruirIndiceFeedback();
+      }).catch(function(err){
+        console.error('Erro ao salvar feedback:', err);
+      });
+
+      var atualizouBanco = false;
+      todosCasos.forEach(function(c){
+        if (normalizarChaveCausa(c.causa) === chaveCausa) {
+          if (tipo === 'acerto') c.votosPositivos = (c.votosPositivos || 0) + 1;
+          if (tipo === 'erro') c.votosNegativos = (c.votosNegativos || 0) + 1;
+          updateCaso(c); 
+          atualizouBanco = true;
+        }
+      });
+
+      var linha = area.querySelector('.feedback-row[data-fb-idx="' + idx + '"]');
+      if (linha) {
+        linha.innerHTML = '<span class="feedback-obrigado">' +
+          (tipo === 'acerto' ? 'Voto contabilizado! O saldo subiu. ✓' : 'Voto contabilizado! O saldo baixou. ✓') +
+          '</span>';
+      }
+
+      var statsEl = $('statsOraculoTexto');
+      if (statsEl) {
+        setTimeout(function(){ statsEl.textContent = textoStatsFeedback(); }, 50);
+      }
+      
+      if(atualizouBanco) {
+        setTimeout(function(){ executarConsulta(); }, 500);
+      }
+    });
+  });
+
+  var btnResponder = area.querySelector('.btn-responder-oraculo');
+  if (btnResponder) {
+    btnResponder.addEventListener('click', function(e){
+      e.stopPropagation();
+      if (synth && synth.speaking) synth.cancel();
+      var tag = btnResponder.getAttribute('data-tag');
+      alternarPistaNoInput(tag);
+      executarConsulta();
+    });
+  }
 }
 
 // ------------------------------------
@@ -1870,7 +2425,7 @@ $('btnLimparBuscaInterno').addEventListener('click', function(e) {
   e.preventDefault();
 
   if (synth && synth.speaking) synth.cancel(); // Cala o robô ao limpar
-  textosDosCards = []; // Zera a playlist
+  textosDosCards.resultados = []; // Zera a playlist
 
   var input = $('queryInput');
   input.value = '';
@@ -1903,11 +2458,21 @@ $('btnSalvarCaso').addEventListener('click', function(){
   if (!causa){ toast('Informe o nome da causa.'); $('inputCausa').focus(); return; }
   if (!sintomas){ toast('Descreva a situação / sinais observados.'); $('inputSintomas').focus(); return; }
 
-  var caso = { causa:causa, categoria:categoria, sintomas:sintomas, tags:tags, detalhes:detalhes, criadoEm:Date.now() };
+  // Caso novo já nasce preparado para receber votos!
+  var caso = { 
+    causa:causa, categoria:categoria, sintomas:sintomas, tags:tags, detalhes:detalhes, criadoEm:Date.now(),
+    votosPositivos: 0, votosNegativos: 0 
+  };
 
   var acao;
   if (editandoId !== null){
+    // Ao editar, temos o cuidado de não zerar os votos antigos
+    var casoAntigo = todosCasos.find(function(c){ return c.id === editandoId; });
     caso.id = editandoId;
+    if (casoAntigo) {
+      caso.votosPositivos = casoAntigo.votosPositivos || 0;
+      caso.votosNegativos = casoAntigo.votosNegativos || 0;
+    }
     acao = updateCaso(caso).then(function(){ toast('Registro atualizado.'); });
   } else {
     acao = addCaso(caso).then(function(){ toast('Registro arquivado.'); });
@@ -1963,17 +2528,17 @@ $('filtroArquivo').addEventListener('input', function(){ renderArquivo($('filtro
    Arquivo: Motor de Renderização de Alta Performance (Scroll Infinito)
    ========================================================= */
 
-// Variáveis de controle para os 100.000 arquivos
 var gruposGlobaisRender = [];
 var paginaLoteAtual = 0;
-var TAMANHO_DO_LOTE = 25; // Quantidade de grupos carregados por vez
+var TAMANHO_DO_LOTE = 25; 
 var sentinelaObserver = null;
 
-// Função mestre que prepara os dados e dispara a renderização
 function renderArquivo(filtro){
   filtro = (filtro || '').toLowerCase().trim();
   var lista = $('listaArquivo');
   var vazio = $('estadoVazioArquivo');
+
+  textosDosCards.arquivo = []; 
 
   if (todosCasos.length === 0){
     lista.innerHTML = '';
@@ -1982,7 +2547,6 @@ function renderArquivo(filtro){
   }
   vazio.style.display = 'none';
 
-  // 1. Agrupa os casos na memória (muito rápido)
   var grupos = {};
   var ordemGrupos = [];
   todosCasos.forEach(function(c){
@@ -1991,7 +2555,6 @@ function renderArquivo(filtro){
     grupos[chave].itens.push(c);
   });
 
-  // 2. Filtra os grupos que combinam com a pesquisa
   gruposGlobaisRender = [];
   ordemGrupos.forEach(function(chave){
     var g = grupos[chave];
@@ -2010,32 +2573,33 @@ function renderArquivo(filtro){
     return;
   }
 
-  // 3. Prepara a tela para os lotes
   lista.innerHTML = ''; 
   paginaLoteAtual = 0;
-
-  // 4. Inicia o primeiro lote
   renderizarProximoLote();
 }
 
-// A mágica: Renderiza um pedaço de cada vez
 function renderizarProximoLote() {
   var lista = $('listaArquivo');
   var inicio = paginaLoteAtual * TAMANHO_DO_LOTE;
   var fim = inicio + TAMANHO_DO_LOTE;
   var lote = gruposGlobaisRender.slice(inicio, fim);
   
-  if (lote.length === 0) return; // Acabou a lista
+  if (lote.length === 0) return; 
 
-  // Cria um container temporário para injetar o HTML sem travar o navegador
   var fragmentoTemp = document.createElement('div');
   var html = '';
 
   lote.forEach(function(g, indexLote){
-    var gi = inicio + indexLote; // ID único real
+    var gi = inicio + indexLote; 
     var categoriaGrupo = (g.itens.find(function(it){ return it.categoria; }) || {}).categoria;
+
+    var fraseLida = g.nome + ". " + g.itens.length + " registro" + (g.itens.length>1?'s':'') + ". ";
+    g.itens.forEach(function(it){
+      if (it.sintomas) fraseLida += it.sintomas + ". ";
+    });
+    textosDosCards.arquivo[gi] = { texto: fraseLida, principal: false }; 
     
-    html += '<div class="grupo" data-g="' + gi + '">' +
+    html += '<div class="grupo tocavel" data-g="' + gi + '" onclick="tocarCard(\'arquivo\', ' + gi + ')">' +
       '<button class="grupo-header" data-toggle="' + gi + '">' +
         '<span class="titulo">' + escapeHtml(g.nome) + (categoriaGrupo ? ' ' + badgeCategoriaHtml(categoriaGrupo) : '') + '</span>' +
         '<span style="display:flex;align-items:center;">' +
@@ -2065,19 +2629,23 @@ function renderizarProximoLote() {
 
   fragmentoTemp.innerHTML = html;
 
-  // LIGA OS EVENTOS DOS BOTÕES (Apenas nos itens novos)
   fragmentoTemp.querySelectorAll('[data-toggle]').forEach(function(btn){
-    btn.addEventListener('click', function(){ btn.closest('.grupo').classList.toggle('open'); });
+    btn.addEventListener('click', function(e){
+      e.stopPropagation(); 
+      btn.closest('.grupo').classList.toggle('open');
+    });
   });
   fragmentoTemp.querySelectorAll('[data-editar]').forEach(function(btn){
-    btn.addEventListener('click', function(){
+    btn.addEventListener('click', function(e){
+      e.stopPropagation(); 
       var id = Number(btn.getAttribute('data-editar'));
       var caso = todosCasos.find(function(c){ return c.id === id; });
       if (caso) iniciarEdicao(caso);
     });
   });
   fragmentoTemp.querySelectorAll('[data-excluir]').forEach(function(btn){
-    btn.addEventListener('click', function(){
+    btn.addEventListener('click', function(e){
+      e.stopPropagation(); 
       var id = Number(btn.getAttribute('data-excluir'));
       confirmar('Excluir este registro?').then(function(ok){
         if (!ok) return;
@@ -2086,25 +2654,21 @@ function renderizarProximoLote() {
     });
   });
 
-  // Remove sentinela antiga se houver
   var velhaSentinela = $('sentinela-scroll');
   if (velhaSentinela) velhaSentinela.remove();
 
-  // Despeja os itens na lista oficial
   while(fragmentoTemp.firstChild) {
     lista.appendChild(fragmentoTemp.firstChild);
   }
 
   paginaLoteAtual++;
 
-  // 5. Se ainda houver itens para renderizar no futuro, cria a Sentinela
   if (paginaLoteAtual * TAMANHO_DO_LOTE < gruposGlobaisRender.length) {
     var sentinela = document.createElement('div');
     sentinela.id = 'sentinela-scroll';
-    sentinela.style.height = '40px'; // Fica invisível no final da lista
+    sentinela.style.height = '40px'; 
     lista.appendChild(sentinela);
 
-    // O Cão de Guarda: Se o usuário rolar a tela e ver a sentinela, carrega mais
     if (!sentinelaObserver) {
       sentinelaObserver = new IntersectionObserver(function(entries) {
         if (entries[0].isIntersecting) {
@@ -2115,7 +2679,6 @@ function renderizarProximoLote() {
     sentinelaObserver.observe(sentinela);
   }
 }
-
 $('btnIrNovoDeArquivo').addEventListener('click', function(){ mudarAba('novo'); });
 $('btnSeedArquivo').addEventListener('click', carregarExemplos);
 
@@ -2130,7 +2693,7 @@ $('btnExportar').addEventListener('click', function(){
     return; 
   }
   
-  // Extrai categorias únicas (Se não tiver, vira "Sem Categoria")
+    // Extrai categorias únicas (Se não tiver, vira "Sem Categoria")
   var categoriasUnicas = new Set();
   todosCasos.forEach(function(c){
     categoriasUnicas.add(c.categoria ? c.categoria.trim() : 'Sem Categoria');
@@ -2150,7 +2713,7 @@ $('btnExportar').addEventListener('click', function(){
                     '</label>';
     listaDiv.appendChild(div);
   });
-  
+
   // Reseta os estados do modal
   $('inputNomeExport').value = '';
   $('btnToggleCategorias').textContent = 'Desmarcar Todas';
@@ -2175,7 +2738,7 @@ $('btnCancelExport').addEventListener('click', function(){
   $('modalExportOverlay').classList.add('hidden');
 });
 
-// 4. Confirma e gera o JSON apenas com o que foi escolhido
+// AQUI ESTÁ A MÁGICA DO EXPORT. COMO COLOCAMOS OS VOTOS DENTRO DO CASO, ELES VÃO JUNTOS SOZINHOS.
 $('btnConfirmExport').addEventListener('click', function(){
   var checkboxes = $('listaCategoriasExport').querySelectorAll('input[type="checkbox"]:checked');
   
@@ -2183,10 +2746,10 @@ $('btnConfirmExport').addEventListener('click', function(){
     toast('Selecione ao menos uma categoria para exportar.');
     return;
   }
-  
+
   // Mapeia quais categorias o usuário marcou
   var categoriasSelecionadas = Array.from(checkboxes).map(function(cb){ return cb.value; });
-  
+
   // Filtra o banco de dados principal
   var casosParaExportar = todosCasos.filter(function(c){
     var cat = c.categoria ? c.categoria.trim() : 'Sem Categoria';
@@ -2202,7 +2765,7 @@ $('btnConfirmExport').addEventListener('click', function(){
   var blob = new Blob([JSON.stringify(casosParaExportar, null, 2)], { type:'application/json' });
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
-  
+
   // Formata o nome do arquivo
   var nomePersonalizado = $('inputNomeExport').value.trim();
   var data = new Date();
@@ -2242,7 +2805,10 @@ $('inputImportar').addEventListener('change', function(e){
           sintomas: String(d.sintomas),
           tags: Array.isArray(d.tags) ? d.tags.map(String) : [],
           detalhes: d.detalhes ? String(d.detalhes) : '',
-          criadoEm: d.criadoEm || Date.now()
+          criadoEm: d.criadoEm || Date.now(),
+          // Importamos o histórico de votos junto com o cartão se ele existir
+          votosPositivos: Number(d.votosPositivos) || 0,
+          votosNegativos: Number(d.votosNegativos) || 0
         });
       })).then(function(){
         toast(validos.length + ' registro(s) importado(s).');
@@ -2268,15 +2834,15 @@ $('btnLimparTudo').addEventListener('click', function(){
    ========================================================= */
 function carregarExemplos(){
   var exemplos = [
-    { causa:'Bateria do carro descarregada', categoria:'Carro', sintomas:'carro não liga, motor de arranque não gira, luzes do painel fracas ou apagadas ao girar a chave, rádio reinicia sozinho', tags:['bateria','arranque'], detalhes:'Verifique a voltagem da bateria e os terminais. Considere carregar ou trocar a bateria.' },
-    { causa:'Bateria do carro descarregada', categoria:'Carro', sintomas:'faróis fracos pela manhã, carro custa a pegar no frio, som do motor de arranque lento e arrastado', tags:['bateria'], detalhes:'Verifique a voltagem da bateria e os terminais. Considere carregar ou trocar a bateria.' },
-    { causa:'Motor de arranque com defeito', categoria:'Carro', sintomas:'ao girar a chave ouço apenas um clique seco e nada acontece, luzes do painel normais mas o carro não liga', tags:['arranque','clique'], detalhes:'Teste a bateria primeiro; se estiver boa, o motor de arranque pode precisar de revisão.' },
-    { causa:'Sem combustível ou bomba de combustível', categoria:'Carro', sintomas:'carro liga e morre na hora em seguida, ponteiro de combustível próximo do zero, motor da bomba não faz o zumbido de costume', tags:['combustivel'], detalhes:'Confirme o nível de combustível e escute se a bomba liga ao girar a chave.' },
-    { causa:'Gripe comum', categoria:'Saúde', sintomas:'dor de garganta, coriza, espirros frequentes, febre baixa, cansaço leve durando poucos dias', tags:['saude','febre'], detalhes:'Repouso, hidratação e acompanhamento dos sintomas. Procure um médico se piorar.' },
-    { causa:'Sinusite', categoria:'Saúde', sintomas:'dor de cabeça na testa e ao redor dos olhos, congestão nasal persistente, secreção espessa, piora ao abaixar a cabeça', tags:['saude','dor de cabeca'], detalhes:'Procure orientação médica se os sintomas persistirem por mais de alguns dias.' }
+    { causa:'Bateria do carro descarregada', categoria:'Carro', sintomas:'carro não liga, motor de arranque não gira, luzes do painel fracas ou apagadas ao girar a chave, rádio reinicia sozinho', tags:['bateria','arranque'], detalhes:'Verifique a voltagem da bateria e os terminais. Considere carregar ou trocar a bateria.', votosPositivos: 2, votosNegativos: 0 },
+    { causa:'Bateria do carro descarregada', categoria:'Carro', sintomas:'faróis fracos pela manhã, carro custa a pegar no frio, som do motor de arranque lento e arrastado', tags:['bateria'], detalhes:'Verifique a voltagem da bateria e os terminais. Considere carregar ou trocar a bateria.', votosPositivos: 2, votosNegativos: 0 },
+    { causa:'Motor de arranque com defeito', categoria:'Carro', sintomas:'ao girar a chave ouço apenas um clique seco e nada acontece, luzes do painel normais mas o carro não liga', tags:['arranque','clique'], detalhes:'Teste a bateria primeiro; se estiver boa, o motor de arranque pode precisar de revisão.', votosPositivos: 0, votosNegativos: 0 },
+    { causa:'Sem combustível ou bomba de combustível', categoria:'Carro', sintomas:'carro liga e morre na hora em seguida, ponteiro de combustível próximo do zero, motor da bomba não faz o zumbido de costume', tags:['combustivel'], detalhes:'Confirme o nível de combustível e escute se a bomba liga ao girar a chave.', votosPositivos: 0, votosNegativos: 0 },
+    { causa:'Gripe comum', categoria:'Saúde', sintomas:'dor de garganta, coriza, espirros frequentes, febre baixa, cansaço leve durando poucos dias', tags:['saude','febre'], detalhes:'Repouso, hidratação e acompanhamento dos sintomas. Procure um médico se piorar.', votosPositivos: 0, votosNegativos: 0 },
+    { causa:'Sinusite', categoria:'Saúde', sintomas:'dor de cabeça na testa e ao redor dos olhos, congestão nasal persistente, secreção espessa, piora ao abaixar a cabeça', tags:['saude','dor de cabeca'], detalhes:'Procure orientação médica se os sintomas persistirem por mais de alguns dias.', votosPositivos: 0, votosNegativos: 0 }
   ];
   Promise.all(exemplos.map(function(ex){
-    return addCaso({ causa:ex.causa, categoria:ex.categoria, sintomas:ex.sintomas, tags:ex.tags, detalhes:ex.detalhes, criadoEm:Date.now() });
+    return addCaso({ causa:ex.causa, categoria:ex.categoria, sintomas:ex.sintomas, tags:ex.tags, detalhes:ex.detalhes, criadoEm:Date.now(), votosPositivos: ex.votosPositivos, votosNegativos: ex.votosNegativos });
   })).then(function(){
     toast('Exemplos carregados.');
     return refreshAll();
@@ -2332,16 +2898,16 @@ window.abrirTagsDaCategoria = function(categoria) {
     html += '<p style="font-size:0.8rem; color:var(--text-muted);">Nenhuma palavra-chave cadastrada nos arquivos desta categoria.</p>';
   } else {
     html += '<div class="chip-container">';
-    
-    // Pega o texto que já está na caixa de pesquisa
+
+    // Pega o texto que já está na caixa de pesquisa      
     var textoAtual = $('queryInput').value.toLowerCase();
     
     Array.from(tags).sort().forEach(function(tag){
       var tagVisual = tag.replace(/_/g, ' '); 
-      
-      // Verifica se essa tag já foi inserida no texto
+
+      // Verifica se essa tag já foi inserida no texto      
       var jaInserida = textoAtual.indexOf(tagVisual.toLowerCase()) !== -1;
-      
+
       // Se já foi inserida, o botão muda para vermelho (-) e ganha a classe 'selecionada'
       if (jaInserida) {
         html += '<button class="chip-pista selecionada" onclick="alternarPistaNoInput(\'' + escapeHtml(tagVisual) + '\')">- ' + escapeHtml(tagVisual) + '</button>';
@@ -2360,7 +2926,7 @@ window.alternarPistaNoInput = function(pista) {
   var textoAtual = input.value;
   var textoMin = textoAtual.toLowerCase();
   var pistaMin = pista.toLowerCase();
-  
+
   // Se a pista já existe no texto, nós a apagamos (remover)
   if (textoMin.indexOf(pistaMin) !== -1) {
     // Tenta remover com vírgula e espaço antes ou depois para não deixar sujeira
@@ -2390,53 +2956,82 @@ window.alternarPistaNoInput = function(pista) {
    Locutor Interativo (Versão Blindada)
    ========================================================= */
 var vozAtivada = false;
-var textosDosCards = []; 
+var textosDosCards = { resultados: [], arquivo: [] };
 var synth = window.speechSynthesis;
 
-// O botão apenas liga ou desliga a permissão
 $('btnToggleVoz').addEventListener('click', function() {
   vozAtivada = !vozAtivada;
   this.style.background = vozAtivada ? 'var(--thread-red-bright)' : 'rgba(0,0,0,0.06)';
   this.style.color = vozAtivada ? '#fff' : '#333';
-  if (!vozAtivada) synth.cancel(); // Cala a boca se desligar
+  if (!vozAtivada) synth.cancel();
   toast(vozAtivada ? 'Voz ativada! Toque num resultado.' : 'Voz desativada.');
 });
 
-// A função que roda quando você toca em um Card
-window.tocarCard = function(indexClicado) {
-  if (!vozAtivada) return; 
+// Um pequeno sino antes do Oráculo começar a falar
+function tocarChime(){
+  try {
+    var AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    var ctx = new AudioCtx();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(660, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.4);
+  } catch(e) { /* se o navegador bloquear áudio, segue sem o sino */ }
+}
 
-  // Se já estiver falando, o toque serve para PARAR.
+window.tocarCard = function(fonte, indexClicado) {
+  if (!vozAtivada) return;
+
   if (synth.speaking) {
     synth.cancel();
     return;
   }
 
-  // Se estava calado, junta os textos do card clicado até o último
-  var textoContinuo = "";
-  for (var i = indexClicado; i < textosDosCards.length; i++) {
-    textoContinuo += textosDosCards[i] + " ... ";
-  }
+  var playlist = textosDosCards[fonte] || [];
+  var fila = playlist.slice(indexClicado).filter(function(item){ return item && item.texto; });
 
-  if (textoContinuo.trim() === "") return;
+  if (fila.length === 0) return;
 
-  var utterance = new SpeechSynthesisUtterance(textoContinuo);
-  utterance.lang = 'pt-BR';
-  utterance.rate = 1.1;
-  
-  // Impede que o Android "esqueça" de falar textos longos
-  window.utteranceAtual = utterance; 
+  tocarChime();
 
-  synth.speak(utterance);
+  var velocidadeBase = config.velocidadeLeitura || 1.1;
+
+  fila.forEach(function(item){
+    var utterance = new SpeechSynthesisUtterance(item.texto + ' ... ');
+    utterance.lang = 'pt-BR';
+
+    if (item.principal) {
+      utterance.pitch = 0.85;
+      utterance.rate = velocidadeBase * 0.95;
+    } else {
+      utterance.pitch = 1.05;
+      utterance.rate = velocidadeBase;
+    }
+
+    synth.speak(utterance);
+  });
 };
 /* =========================================================
    Atualização geral de estado e Recálculo do Cérebro
    ========================================================= */
 function refreshAll(){
-  return getAllCasos().then(function(casos){
-    todosCasos = casos.sort(function(a,b){ return (b.criadoEm||0) - (a.criadoEm||0); });
+  return Promise.all([getAllCasos(), getAllFeedback()]).then(function(resultados){
+    var casos = resultados[0];
+    var feedbacks = resultados[1];
 
-    // O NITRO SENDO PREPARADO EM SEGUNDO PLANO
+    todosCasos = casos.sort(function(a,b){ return (b.criadoEm||0) - (a.criadoEm||0); });
+    todosFeedbacks = feedbacks;
+    reconstruirIndiceFeedback();
+
     modeloTreinadoCache = treinarModelo(todosCasos);
 
     $('numeroArquivo').textContent = String(todosCasos.length).padStart(3,'0');
@@ -2466,7 +3061,6 @@ function refreshAll(){
 
     renderArquivo($('filtroArquivo').value);
     
-    // Atualiza os chips exploratórios 
     if (window.renderExploradorCategorias) {
         window.renderExploradorCategorias();
     }
