@@ -944,6 +944,7 @@
         </div>
       </details>
 
+<!-- 2.5 Voz do Oráculo -->
       <details class="config-group">
         <summary>
           <span>🔊 Voz do Oráculo</span>
@@ -954,13 +955,33 @@
         </summary>
         <div class="card-body">
           <label class="field-label">VELOCIDADE DE LEITURA (<span id="valVelocidadeLeitura">1.1x</span>)</label>
-          <input type="range" id="rangeVelocidade" min="0.5" max="2" step="0.1" value="1.1" style="width:100%;">
-          <p style="font-size:0.75rem; color:var(--text-muted); margin-top:5px; margin-bottom:0;">
-            Ajusta a rapidez com que o Oráculo narra os resultados em voz alta.
-          </p>
+          <input type="range" id="rangeVelocidade" min="0.5" max="2" step="0.1" value="1.1" style="width:100%; margin-bottom: 25px;">
+          
+          <p style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin:0 0 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom:5px;">NA ABA DEDUZIR, LER:</p>
+          <label class="field-label" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:normal; margin-bottom:10px;">
+            <input type="checkbox" id="checkVozResPorcentagem" style="width:18px; height:18px; accent-color:var(--primary);">
+            A porcentagem de probabilidade (Ex: 80% de chance)
+          </label>
+          <label class="field-label" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:normal; margin-bottom:10px;">
+            <input type="checkbox" id="checkVozResSintomas" style="width:18px; height:18px; accent-color:var(--primary);">
+            A SITUAÇÃO / SINAIS OBSERVADOS
+          </label>
+          <label class="field-label" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:normal; margin-bottom:25px;">
+            <input type="checkbox" id="checkVozResDetalhes" style="width:18px; height:18px; accent-color:var(--primary);">
+            Os DETALHES / SOLUÇÃO
+          </label>
+
+          <p style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin:0 0 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom:5px;">NO ARQUIVO, LER:</p>
+          <label class="field-label" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:normal; margin-bottom:10px;">
+            <input type="checkbox" id="checkVozArqSintomas" style="width:18px; height:18px; accent-color:var(--primary);">
+            A SITUAÇÃO / SINAIS OBSERVADOS
+          </label>
+          <label class="field-label" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:normal;">
+            <input type="checkbox" id="checkVozArqDetalhes" style="width:18px; height:18px; accent-color:var(--primary);">
+            Os DETALHES / SOLUÇÃO
+          </label>
         </div>
       </details>
-
       <details class="config-group">
         <summary>
           <span>🛑 Palavras Ignoradas</span>
@@ -1167,6 +1188,11 @@ var configPadrao = {
   ativarIDF: true,
   ativarFuzzy: true, // <-- NOVO CONTROLE FUZZY
   velocidadeLeitura: 1.1, // <-- NOVO VELOCIDADE ÁUDIO
+  // NOVOS: Configurações do Locutor
+  vozResDetalhes: false, 
+  vozResSintomas: false,
+  vozArqSintomas: false,
+  vozArqDetalhes: false,
   pesoVotoPositivo: 3.0, // <-- NOVO PESO DE VOTOS 👍
   pesoVotoNegativo: 3.0, // <-- NOVO PESO DE VOTOS 👎
   limiarDuvida: 60,      // <-- NOVO: % que dispara a pergunta de dúvida
@@ -1196,6 +1222,12 @@ if(config.pesoVotoPositivo === undefined) config.pesoVotoPositivo = configPadrao
 if(config.pesoVotoNegativo === undefined) config.pesoVotoNegativo = configPadrao.pesoVotoNegativo;
 if(config.limiarDuvida === undefined) config.limiarDuvida = configPadrao.limiarDuvida; // <-- NOVO
 if(config.limiarCobertura === undefined) config.limiarCobertura = configPadrao.limiarCobertura; // <-- NOVO
+// NOVOS: Garantia de que as caixinhas de voz funcionem
+if(config.vozResPorcentagem === undefined) config.vozResPorcentagem = true; // Por padrão a % vem ligada
+if(config.vozResDetalhes === undefined) config.vozResDetalhes = false;
+if(config.vozResSintomas === undefined) config.vozResSintomas = false;
+if(config.vozArqSintomas === undefined) config.vozArqSintomas = false;
+if(config.vozArqDetalhes === undefined) config.vozArqDetalhes = false;
 
 // === UI: Controle de Pesos ===
 $('rangePalavra').value = config.pesoPalavra;
@@ -1339,6 +1371,54 @@ $('btnResetCuriosidade').addEventListener('click', function(e){
     }
   });
 });
+// === UI: Voz do Oráculo (Velocidade e Conteúdo) ===
+$('rangeVelocidade').value = config.velocidadeLeitura;
+$('valVelocidadeLeitura').textContent = config.velocidadeLeitura.toFixed(1) + 'x';
+$('rangeVelocidade').addEventListener('input', function(e){
+  config.velocidadeLeitura = parseFloat(e.target.value);
+  $('valVelocidadeLeitura').textContent = config.velocidadeLeitura.toFixed(1) + 'x';
+  salvarConfig();
+});
+
+$('checkVozResPorcentagem').checked = config.vozResPorcentagem;
+$('checkVozResPorcentagem').addEventListener('change', function(e){ config.vozResPorcentagem = e.target.checked; salvarConfig(); });
+
+$('checkVozResDetalhes').checked = config.vozResDetalhes;
+$('checkVozResDetalhes').addEventListener('change', function(e){ config.vozResDetalhes = e.target.checked; salvarConfig(); });
+
+$('checkVozResSintomas').checked = config.vozResSintomas;
+$('checkVozResSintomas').addEventListener('change', function(e){ config.vozResSintomas = e.target.checked; salvarConfig(); });
+
+$('checkVozArqSintomas').checked = config.vozArqSintomas;
+$('checkVozArqSintomas').addEventListener('change', function(e){ config.vozArqSintomas = e.target.checked; salvarConfig(); });
+
+$('checkVozArqDetalhes').checked = config.vozArqDetalhes;
+$('checkVozArqDetalhes').addEventListener('change', function(e){ config.vozArqDetalhes = e.target.checked; salvarConfig(); });
+
+$('btnResetVoz').addEventListener('click', function(e){
+  e.stopPropagation();
+  confirmar('Restaurar as configurações de voz para o padrão?').then(function(ok){
+    if(ok) {
+      config.velocidadeLeitura = 1.1;
+      config.vozResPorcentagem = true;
+      config.vozResDetalhes = false;
+      config.vozResSintomas = false;
+      config.vozArqSintomas = false;
+      config.vozArqDetalhes = false;
+      salvarConfig();
+      
+      $('rangeVelocidade').value = config.velocidadeLeitura;
+      $('valVelocidadeLeitura').textContent = config.velocidadeLeitura.toFixed(1) + 'x';
+      $('checkVozResPorcentagem').checked = config.vozResPorcentagem;
+      $('checkVozResDetalhes').checked = config.vozResDetalhes;
+      $('checkVozResSintomas').checked = config.vozResSintomas;
+      $('checkVozArqSintomas').checked = config.vozArqSintomas;
+      $('checkVozArqDetalhes').checked = config.vozArqDetalhes;
+      
+      toast('Voz restaurada ao padrão.');
+    }
+  });
+});
 // === UI: Stopwords (Balõezinhos) ===
 function renderStopwords() {
   var area = $('areaStopwords');
@@ -1431,6 +1511,11 @@ $('btnRestaurarConfig').addEventListener('click', function(){
       $('valVelocidadeLeitura').textContent = config.velocidadeLeitura.toFixed(1) + 'x';
       $('rangeLimiarCobertura').value = config.limiarCobertura;
       $('valLimiarCobertura').textContent = config.limiarCobertura;
+      $('checkVozResPorcentagem').checked = config.vozResPorcentagem;
+      $('checkVozResDetalhes').checked = config.vozResDetalhes;
+      $('checkVozResSintomas').checked = config.vozResSintomas;
+      $('checkVozArqSintomas').checked = config.vozArqSintomas;
+      $('checkVozArqDetalhes').checked = config.vozArqDetalhes;
       renderStopwords();
       renderSinonimos();
       toast('Ajustes restaurados.');
@@ -2252,16 +2337,21 @@ function renderResultados(resultados, textoOriginal){
       return '<span class="chip">' + escapeHtml(t.replace(/_/g,' ')) + '</span>';
     }).join('');
 
-    var fraseLida = rotulo + ". " + pct + "% de chance. " + r.nome + ". ";
-    if (r.detalhes) fraseLida += "Solução: " + r.detalhes + ". ";
-    textosDosCards.resultados.push({ texto: fraseLida, principal: (i === 0) });
+    // === NOVA LÓGICA DE MEMÓRIA DA VOZ DOS RESULTADOS ===
+    // Guardamos apenas os dados. A voz será montada lá no tocarCard!
+    textosDosCards.resultados.push({ 
+        nome: r.nome,
+        pct: pct,
+        detalhes: r.detalhes,
+        principal: (i === 0),
+        chaveCausa: chaveCausaAtual
+    });
 
     var textoCopia = "🔍 *Oráculo Dedutivo*\n\n" + 
                      "Fato: *" + r.nome + "* (" + pct + "% de probabilidade)\n" +
                      (r.detalhes ? "\n💡 *Solução / Notas:*\n" + r.detalhes : "");
                      
     var encodeCopia = encodeURIComponent(textoCopia);
-
     html +=
       '<div class="result-card tocavel ' + tier + '" onclick="tocarCard(\'resultados\', ' + i + ')">' +
         '<div class="stamp-circle"><span class="num">' + pct + '</span><span class="pct">%</span></div>' +
@@ -2593,12 +2683,13 @@ function renderizarProximoLote() {
     var gi = inicio + indexLote; 
     var categoriaGrupo = (g.itens.find(function(it){ return it.categoria; }) || {}).categoria;
 
-    var fraseLida = g.nome + ". " + g.itens.length + " registro" + (g.itens.length>1?'s':'') + ". ";
-    g.itens.forEach(function(it){
-      if (it.sintomas) fraseLida += it.sintomas + ". ";
-    });
-    textosDosCards.arquivo[gi] = { texto: fraseLida, principal: false }; 
-    
+    // === NOVA LÓGICA DE MEMÓRIA DA VOZ DO ARQUIVO ===
+    // Guardamos o objeto completo (com todos os itens/registros) para o locutor investigar na hora!
+    textosDosCards.arquivo[gi] = { 
+        nome: g.nome, 
+        itens: g.itens, 
+        principal: false 
+    };
     html += '<div class="grupo tocavel" data-g="' + gi + '" onclick="tocarCard(\'arquivo\', ' + gi + ')">' +
       '<button class="grupo-header" data-toggle="' + gi + '">' +
         '<span class="titulo">' + escapeHtml(g.nome) + (categoriaGrupo ? ' ' + badgeCategoriaHtml(categoriaGrupo) : '') + '</span>' +
@@ -2997,25 +3088,72 @@ window.tocarCard = function(fonte, indexClicado) {
   }
 
   var playlist = textosDosCards[fonte] || [];
-  var fila = playlist.slice(indexClicado).filter(function(item){ return item && item.texto; });
+  var fila = playlist.slice(indexClicado).filter(function(item){ return item; });
 
   if (fila.length === 0) return;
 
   tocarChime();
-
   var velocidadeBase = config.velocidadeLeitura || 1.1;
 
-  fila.forEach(function(item){
-    var utterance = new SpeechSynthesisUtterance(item.texto + ' ... ');
-    utterance.lang = 'pt-BR';
+  fila.forEach(function(item, offset){
+    var frase = "";
+    var isPrincipal = item.principal;
+    
+    // =======================================================
+    // MONTAGEM DA FRASE AO VIVO
+    // =======================================================
+    if (fonte === 'resultados') {
+        var rotulo = isPrincipal ? 'HIPÓTESE PRINCIPAL' : 'HIPÓTESE ' + (indexClicado + offset + 1);
+        
+        // 1º - LÊ A HIPÓTESE E O TÍTULO (E a % se estiver ativada)
+        frase = rotulo + ". ";
+        if (config.vozResPorcentagem) {
+            frase += item.pct + "% de probabilidade. ";
+        }
+        frase += item.nome + ". ";
 
-    if (item.principal) {
-      utterance.pitch = 0.85;
-      utterance.rate = velocidadeBase * 0.95;
-    } else {
-      utterance.pitch = 1.05;
-      utterance.rate = velocidadeBase;
+        // 2º - LÊ A SITUAÇÃO / SINAIS
+        if (config.vozResSintomas) {
+            var casosDestaCausa = todosCasos.filter(function(c){ return normalizarChaveCausa(c.causa) === item.chaveCausa; });
+            if (casosDestaCausa.length > 0) {
+                frase += "Histórico desta causa: ";
+                casosDestaCausa.forEach(function(c, idx) {
+                    // Só numera se houver mais de 1 registro
+                    if (casosDestaCausa.length > 1) frase += "Registro " + (idx+1) + ". ";
+                    if (c.sintomas) frase += c.sintomas + ". ";
+                });
+            }
+        }
+
+        // 3º - LÊ OS DETALHES / SOLUÇÃO
+        if (config.vozResDetalhes && item.detalhes) {
+            frase += "Detalhes e Solução: " + item.detalhes + ". ";
+        }
+    } 
+    else if (fonte === 'arquivo') {
+        frase = item.nome + ". " + item.itens.length + " registro" + (item.itens.length>1?'s':'') + ". ";
+        
+        if (config.vozArqSintomas || config.vozArqDetalhes) {
+            item.itens.forEach(function(it, idx){
+                // Só numera se houver mais de 1 registro
+                if (item.itens.length > 1) frase += "Registro " + (idx+1) + ": ";
+                
+                if (config.vozArqSintomas && it.sintomas) {
+                    frase += "Sinais e Sintomas: " + it.sintomas + ". ";
+                }
+                if (config.vozArqDetalhes && it.detalhes) {
+                    frase += "Detalhes da Solução: " + it.detalhes + ". ";
+                }
+            });
+        }
     }
+
+    if (!frase) return; 
+
+    var utterance = new SpeechSynthesisUtterance(frase + ' ... ');
+    utterance.lang = 'pt-BR';
+    utterance.pitch = isPrincipal ? 0.85 : 1.05;
+    utterance.rate = isPrincipal ? (velocidadeBase * 0.95) : velocidadeBase;
 
     synth.speak(utterance);
   });
