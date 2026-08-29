@@ -817,12 +817,12 @@
       </div>
 
       <div class="toolbar" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
-        <input type="search" id="filtroArquivo" placeholder="Pesquisar..." style="flex: 1; min-width: 120px;">
-        <select id="filtroCategoriaArquivo" style="flex: 1; min-width: 80px;color: #a89c86; border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; font-family: inherit; font-size: 0.85rem; background: var(--surface);">
+        
+        <select id="filtroCategoriaArquivo" style="flex: 0 0 auto; min-width: 80px;color: #a89c86; border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; font-family: inherit; font-size: 0.85rem; background: var(--surface);">
           <option value="">Todas as categorias</option>
         </select>
-        <button id="btnExportar" class="btn btn-small">Exportar</button>
-        <button id="btnImportarTrigger" class="btn btn-small">Importar</button>
+        <button id="btnExportar" class="btn btn-small">🢁 Exportar</button>
+        <button id="btnImportarTrigger" class="btn btn-small">🡻 Importar</button>
         <input type="file" id="inputImportar" accept="application/json" style="display:none;">
       </div>
 
@@ -835,7 +835,7 @@
           <button class="btn btn-small" id="btnSeedArquivo">Carregar exemplos</button>
         </div>
       </div>
-
+      <input type="search" id="filtroArquivo" placeholder="Pesquisar..." style="flex: 1; min-width: 120px;">
       <details class="info-box">
         <summary>Como funciona a dedução?</summary>
         <p>Cada registro que você arquiva vira um exemplo de treino: um nome de causa + as palavras que descrevem quando ela acontece. Ao consultar, o texto digitado é comparado, palavra por palavra e em pares de palavras (bigramas), com cada causa cadastrada, usando um classificador estatístico simples (Bayes ingênuo). O resultado é uma porcentagem relativa de o quanto os fatos descritos combinam com cada causa conhecida.</p>
@@ -967,7 +967,7 @@
           <p style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin:0 0 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom:5px;">NA ABA DEDUZIR, LER:</p>
           <label class="field-label" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:normal; margin-bottom:10px;">
             <input type="checkbox" id="checkVozResPorcentagem" style="width:18px; height:18px; accent-color:var(--primary);">
-            A porcentagem de probabilidade (Ex: 80% de chance)
+            Lê a porcentagem (Ex: 80% de chance)
           </label>
           <label class="field-label" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:normal; margin-bottom:10px;">
             <input type="checkbox" id="checkVozResSintomas" style="width:18px; height:18px; accent-color:var(--primary);">
