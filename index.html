@@ -3044,39 +3044,56 @@ window.alternarPistaNoInput = function(pista) {
   }
 };
 /* =========================================================
-   Locutor Interativo (Versão Blindada)
+   Locutor Interativo (Versão Blindada e Mobile-Friendly)
    ========================================================= */
 var vozAtivada = false;
 var textosDosCards = { resultados: [], arquivo: [] };
 var synth = window.speechSynthesis;
+var audioCtxSingleton = null; // O SEGREDO DO CELULAR: Reutilizar o áudio para não travar!
 
 $('btnToggleVoz').addEventListener('click', function() {
   vozAtivada = !vozAtivada;
   this.style.background = vozAtivada ? 'var(--thread-red-bright)' : 'rgba(0,0,0,0.06)';
   this.style.color = vozAtivada ? '#fff' : '#333';
-  if (!vozAtivada) synth.cancel();
+  
+  if (vozAtivada) {
+    // DESBLOQUEIO DE CELULAR: Manda uma fala com volume 0 só para acordar o motor do Android/iOS
+    var unlock = new SpeechSynthesisUtterance('');
+    unlock.volume = 0;
+    synth.speak(unlock);
+  } else {
+    synth.cancel();
+  }
   toast(vozAtivada ? 'Voz ativada! Toque num resultado.' : 'Voz desativada.');
 });
 
-// Um pequeno sino antes do Oráculo começar a falar
 function tocarChime(){
   try {
     var AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
-    var ctx = new AudioCtx();
-    var osc = ctx.createOscillator();
-    var gain = ctx.createGain();
+    
+    // Cria o motor de áudio uma vez só! Salva o celular de travar.
+    if (!audioCtxSingleton) {
+      audioCtxSingleton = new AudioCtx();
+    }
+    // Acorda o áudio no iOS se ele tiver dormido
+    if (audioCtxSingleton.state === 'suspended') {
+      audioCtxSingleton.resume();
+    }
+
+    var osc = audioCtxSingleton.createOscillator();
+    var gain = audioCtxSingleton.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(660, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
-    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+    osc.frequency.setValueAtTime(660, audioCtxSingleton.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(880, audioCtxSingleton.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.0001, audioCtxSingleton.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.15, audioCtxSingleton.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtxSingleton.currentTime + 0.4);
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(audioCtxSingleton.destination);
     osc.start();
-    osc.stop(ctx.currentTime + 0.4);
-  } catch(e) { /* se o navegador bloquear áudio, segue sem o sino */ }
+    osc.stop(audioCtxSingleton.currentTime + 0.4);
+  } catch(e) { }
 }
 
 window.tocarCard = function(fonte, indexClicado) {
@@ -3105,7 +3122,7 @@ window.tocarCard = function(fonte, indexClicado) {
     if (fonte === 'resultados') {
         var rotulo = isPrincipal ? 'HIPÓTESE PRINCIPAL' : 'HIPÓTESE ' + (indexClicado + offset + 1);
         
-        // 1º - LÊ A HIPÓTESE E O TÍTULO (E a % se estiver ativada)
+        // 1º - LÊ A HIPÓTESE E O TÍTULO 
         frase = rotulo + ". ";
         if (config.vozResPorcentagem) {
             frase += item.pct + "% de probabilidade. ";
@@ -3118,7 +3135,6 @@ window.tocarCard = function(fonte, indexClicado) {
             if (casosDestaCausa.length > 0) {
                 frase += "Histórico desta causa: ";
                 casosDestaCausa.forEach(function(c, idx) {
-                    // Só numera se houver mais de 1 registro
                     if (casosDestaCausa.length > 1) frase += "Registro " + (idx+1) + ". ";
                     if (c.sintomas) frase += c.sintomas + ". ";
                 });
@@ -3135,7 +3151,6 @@ window.tocarCard = function(fonte, indexClicado) {
         
         if (config.vozArqSintomas || config.vozArqDetalhes) {
             item.itens.forEach(function(it, idx){
-                // Só numera se houver mais de 1 registro
                 if (item.itens.length > 1) frase += "Registro " + (idx+1) + ": ";
                 
                 if (config.vozArqSintomas && it.sintomas) {
@@ -3150,6 +3165,7 @@ window.tocarCard = function(fonte, indexClicado) {
 
     if (!frase) return; 
 
+    // Manda para o motor de voz (compatível com Android e iOS)
     var utterance = new SpeechSynthesisUtterance(frase + ' ... ');
     utterance.lang = 'pt-BR';
     utterance.pitch = isPrincipal ? 0.85 : 1.05;
