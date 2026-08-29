@@ -816,14 +816,17 @@
         <div class="stat-box"><div class="n" id="statTotalCausas">0</div><div class="l">causas</div></div>
       </div>
 
-      <div class="toolbar">
-        <input type="search" id="filtroArquivo" placeholder="Filtrar por causa ou texto...">
+      <div class="toolbar" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
+        <input type="search" id="filtroArquivo" placeholder="Pesquisar..." style="flex: 1; min-width: 120px;">
+        <select id="filtroCategoriaArquivo" style="flex: 1; min-width: 80px;color: #a89c86; border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; font-family: inherit; font-size: 0.85rem; background: var(--surface);">
+          <option value="">Todas as categorias</option>
+        </select>
         <button id="btnExportar" class="btn btn-small">Exportar</button>
         <button id="btnImportarTrigger" class="btn btn-small">Importar</button>
         <input type="file" id="inputImportar" accept="application/json" style="display:none;">
       </div>
 
-      <div id="listaArquivo" style="max-height: 42vh;overflow-y: auto;scrollbar-width: thin;scrollbar-color: rgb(32 27 19) rgba(255, 255, 255, .05);"></div>
+      <div id="listaArquivo" style="max-height: 42vh; min-height: 41.9vh; overflow-y: auto;scrollbar-width: thin;scrollbar-color: rgb(32 27 19) rgba(255, 255, 255, .05);"></div>
       <div id="estadoVazioArquivo" class="empty-state" style="display:none;">
         <div class="empty-icon">🗂</div>
         <p>Nenhum registro arquivado ainda.<br>Adicione uma causa ou carregue exemplos de demonstração.</p>
@@ -2612,7 +2615,8 @@ $('cancelarEdicao').addEventListener('click', function(){
 /* =========================================================
    Arquivo (listagem / exportação / importação)
    ========================================================= */
-$('filtroArquivo').addEventListener('input', function(){ renderArquivo($('filtroArquivo').value); });
+$('filtroArquivo').addEventListener('input', function(){ renderArquivo($('filtroArquivo').value, $('filtroCategoriaArquivo').value); });
+$('filtroCategoriaArquivo').addEventListener('change', function(){ renderArquivo($('filtroArquivo').value, $('filtroCategoriaArquivo').value); });
 
 /* =========================================================
    Arquivo: Motor de Renderização de Alta Performance (Scroll Infinito)
@@ -2623,8 +2627,9 @@ var paginaLoteAtual = 0;
 var TAMANHO_DO_LOTE = 25; 
 var sentinelaObserver = null;
 
-function renderArquivo(filtro){
+function renderArquivo(filtro, filtroCat){
   filtro = (filtro || '').toLowerCase().trim();
+  filtroCat = (filtroCat || '').trim();
   var lista = $('listaArquivo');
   var vazio = $('estadoVazioArquivo');
 
@@ -2648,18 +2653,23 @@ function renderArquivo(filtro){
   gruposGlobaisRender = [];
   ordemGrupos.forEach(function(chave){
     var g = grupos[chave];
+    
+    // AQUI O FILTRO DA CATEGORIA ENTRA EM AÇÃO
+    var catDoGrupo = (g.itens[0] && g.itens[0].categoria) ? g.itens[0].categoria.trim() : '';
+    if (filtroCat && catDoGrupo !== filtroCat) return; 
+
     var bateNoNome = g.nome.toLowerCase().indexOf(filtro) !== -1;
     var itensFiltrados = g.itens.filter(function(it){
       return !filtro || bateNoNome || (it.sintomas||'').toLowerCase().indexOf(filtro) !== -1;
     });
     
     if (itensFiltrados.length > 0) {
-      gruposGlobaisRender.push({ nome: g.nome, itens: itensFiltrados });
+      gruposGlobaisRender.push({ nome: g.nome, itens: itensFiltrados, categoria: catDoGrupo });
     }
   });
 
   if (gruposGlobaisRender.length === 0) {
-    lista.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;">Nada encontrado para esse filtro.</p>';
+    lista.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;text-align:center;padding:20px;">Nada encontrado para esse filtro.</p>';
     return;
   }
 
@@ -2681,15 +2691,16 @@ function renderizarProximoLote() {
 
   lote.forEach(function(g, indexLote){
     var gi = inicio + indexLote; 
-    var categoriaGrupo = (g.itens.find(function(it){ return it.categoria; }) || {}).categoria;
+    var categoriaGrupo = g.categoria;
 
-    // === NOVA LÓGICA DE MEMÓRIA DA VOZ DO ARQUIVO ===
-    // Guardamos o objeto completo (com todos os itens/registros) para o locutor investigar na hora!
+    // A memória da voz guarda a categoria para a barreira funcionar
     textosDosCards.arquivo[gi] = { 
         nome: g.nome, 
         itens: g.itens, 
-        principal: false 
+        principal: false,
+        categoria: categoriaGrupo 
     };
+    
     html += '<div class="grupo tocavel" data-g="' + gi + '" onclick="tocarCard(\'arquivo\', ' + gi + ')">' +
       '<button class="grupo-header" data-toggle="' + gi + '">' +
         '<span class="titulo">' + escapeHtml(g.nome) + (categoriaGrupo ? ' ' + badgeCategoriaHtml(categoriaGrupo) : '') + '</span>' +
@@ -2714,7 +2725,6 @@ function renderizarProximoLote() {
         '</div>' +
       '</div>';
     });
-
     html += '</div></div>';
   });
 
@@ -3044,12 +3054,26 @@ window.alternarPistaNoInput = function(pista) {
   }
 };
 /* =========================================================
-   Locutor Interativo (Versão Blindada e Mobile-Friendly)
+   Locutor Interativo (Versão Blindada, Wake Lock e Filtro)
    ========================================================= */
 var vozAtivada = false;
 var textosDosCards = { resultados: [], arquivo: [] };
 var synth = window.speechSynthesis;
-var audioCtxSingleton = null; // O SEGREDO DO CELULAR: Reutilizar o áudio para não travar!
+var audioCtxSingleton = null; 
+
+// --- TRAVA DE TELA (WAKE LOCK) ---
+var wakeLockObj = null;
+async function manterTelaAcordada() {
+  if ('wakeLock' in navigator) {
+    try { wakeLockObj = await navigator.wakeLock.request('screen'); } catch (err) {}
+  }
+}
+function liberarTela() {
+  if (wakeLockObj !== null) {
+    wakeLockObj.release().catch(function(){});
+    wakeLockObj = null;
+  }
+}
 
 $('btnToggleVoz').addEventListener('click', function() {
   vozAtivada = !vozAtivada;
@@ -3057,12 +3081,12 @@ $('btnToggleVoz').addEventListener('click', function() {
   this.style.color = vozAtivada ? '#fff' : '#333';
   
   if (vozAtivada) {
-    // DESBLOQUEIO DE CELULAR: Manda uma fala com volume 0 só para acordar o motor do Android/iOS
     var unlock = new SpeechSynthesisUtterance('');
     unlock.volume = 0;
     synth.speak(unlock);
   } else {
     synth.cancel();
+    liberarTela();
   }
   toast(vozAtivada ? 'Voz ativada! Toque num resultado.' : 'Voz desativada.');
 });
@@ -3071,15 +3095,8 @@ function tocarChime(){
   try {
     var AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
-    
-    // Cria o motor de áudio uma vez só! Salva o celular de travar.
-    if (!audioCtxSingleton) {
-      audioCtxSingleton = new AudioCtx();
-    }
-    // Acorda o áudio no iOS se ele tiver dormido
-    if (audioCtxSingleton.state === 'suspended') {
-      audioCtxSingleton.resume();
-    }
+    if (!audioCtxSingleton) { audioCtxSingleton = new AudioCtx(); }
+    if (audioCtxSingleton.state === 'suspended') { audioCtxSingleton.resume(); }
 
     var osc = audioCtxSingleton.createOscillator();
     var gain = audioCtxSingleton.createGain();
@@ -3101,35 +3118,47 @@ window.tocarCard = function(fonte, indexClicado) {
 
   if (synth.speaking) {
     synth.cancel();
+    liberarTela();
     return;
   }
 
   var playlist = textosDosCards[fonte] || [];
-  var fila = playlist.slice(indexClicado).filter(function(item){ return item; });
+  var itemClicado = playlist[indexClicado];
+  if (!itemClicado) return;
+
+  var fila = [];
+  
+  // Barreira Inteligente (Funciona apenas no Arquivo)
+  if (fonte === 'arquivo') {
+      var categoriaAlvo = itemClicado.categoria;
+      for (var i = indexClicado; i < playlist.length; i++) {
+          if (!playlist[i]) continue;
+          if (playlist[i].categoria !== categoriaAlvo) break; 
+          fila.push(playlist[i]);
+      }
+  } else {
+      fila = playlist.slice(indexClicado).filter(function(item){ return item; });
+  }
 
   if (fila.length === 0) return;
 
   tocarChime();
+  manterTelaAcordada(); 
+
   var velocidadeBase = config.velocidadeLeitura || 1.1;
 
   fila.forEach(function(item, offset){
     var frase = "";
     var isPrincipal = item.principal;
     
-    // =======================================================
-    // MONTAGEM DA FRASE AO VIVO
-    // =======================================================
     if (fonte === 'resultados') {
         var rotulo = isPrincipal ? 'HIPÓTESE PRINCIPAL' : 'HIPÓTESE ' + (indexClicado + offset + 1);
-        
-        // 1º - LÊ A HIPÓTESE E O TÍTULO 
         frase = rotulo + ". ";
         if (config.vozResPorcentagem) {
             frase += item.pct + "% de probabilidade. ";
         }
         frase += item.nome + ". ";
 
-        // 2º - LÊ A SITUAÇÃO / SINAIS
         if (config.vozResSintomas) {
             var casosDestaCausa = todosCasos.filter(function(c){ return normalizarChaveCausa(c.causa) === item.chaveCausa; });
             if (casosDestaCausa.length > 0) {
@@ -3141,7 +3170,6 @@ window.tocarCard = function(fonte, indexClicado) {
             }
         }
 
-        // 3º - LÊ OS DETALHES / SOLUÇÃO
         if (config.vozResDetalhes && item.detalhes) {
             frase += "Detalhes e Solução: " + item.detalhes + ". ";
         }
@@ -3152,24 +3180,25 @@ window.tocarCard = function(fonte, indexClicado) {
         if (config.vozArqSintomas || config.vozArqDetalhes) {
             item.itens.forEach(function(it, idx){
                 if (item.itens.length > 1) frase += "Registro " + (idx+1) + ": ";
-                
-                if (config.vozArqSintomas && it.sintomas) {
-                    frase += "Sinais e Sintomas: " + it.sintomas + ". ";
-                }
-                if (config.vozArqDetalhes && it.detalhes) {
-                    frase += "Detalhes da Solução: " + it.detalhes + ". ";
-                }
+                if (config.vozArqSintomas && it.sintomas) frase += "Sinais e Sintomas: " + it.sintomas + ". ";
+                if (config.vozArqDetalhes && it.detalhes) frase += "Detalhes da Solução: " + it.detalhes + ". ";
             });
         }
     }
 
     if (!frase) return; 
 
-    // Manda para o motor de voz (compatível com Android e iOS)
     var utterance = new SpeechSynthesisUtterance(frase + ' ... ');
     utterance.lang = 'pt-BR';
     utterance.pitch = isPrincipal ? 0.85 : 1.05;
     utterance.rate = isPrincipal ? (velocidadeBase * 0.95) : velocidadeBase;
+
+    utterance.onend = function() {
+        if (offset === fila.length - 1) liberarTela();
+    };
+    utterance.onerror = function() {
+        if (offset === fila.length - 1) liberarTela();
+    };
 
     synth.speak(utterance);
   });
@@ -3203,7 +3232,11 @@ function refreshAll(){
     });
     datalist.innerHTML = nomesUnicos.map(function(n){ return '<option value="' + escapeHtml(n) + '">'; }).join('');
 
+    // Prepara as Categorias
     var datalistCat = $('listaCategorias');
+    var selectCatArquivo = $('filtroCategoriaArquivo'); 
+    var catArquivoAtual = selectCatArquivo ? selectCatArquivo.value : ''; 
+
     var categoriasUnicas = [];
     var vistosCat = new Set();
     todosCasos.forEach(function(c){
@@ -3213,7 +3246,15 @@ function refreshAll(){
     });
     datalistCat.innerHTML = categoriasUnicas.map(function(n){ return '<option value="' + escapeHtml(n) + '">'; }).join('');
 
-    renderArquivo($('filtroArquivo').value);
+    // Popula o Select da aba Arquivo
+    if (selectCatArquivo) {
+      selectCatArquivo.innerHTML = '<option value="">Todas as categorias</option>' + 
+        categoriasUnicas.sort().map(function(n){ 
+            return '<option value="' + escapeHtml(n) + '"' + (n === catArquivoAtual ? ' selected' : '') + '>' + escapeHtml(n) + '</option>'; 
+        }).join('');
+    }
+
+    renderArquivo($('filtroArquivo').value, catArquivoAtual);
     
     if (window.renderExploradorCategorias) {
         window.renderExploradorCategorias();
