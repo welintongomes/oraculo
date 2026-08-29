@@ -911,9 +911,13 @@
           <input type="range" id="rangeVotoPositivo" min="0" max="10" step="0.5" value="3" style="width:100%; margin-bottom:15px;">
 
           <label class="field-label">FORÇA DO VOTO NEGATIVO (👎) (<span id="valPesoVotoNegativo">3</span>x)</label>
-          <input type="range" id="rangeVotoNegativo" min="0" max="10" step="0.5" value="3" style="width:100%;">
-          <p style="font-size:0.75rem; color:var(--text-muted); margin-top:10px; margin-bottom:0;">
-            Ajusta o peso do saldo nas suas exportações e o impacto do feedback na dedução final.
+          <input type="range" id="rangeVotoNegativo" min="0" max="10" step="0.5" value="3" style="width:100%; margin-bottom: 20px;">
+
+          <label class="field-label">FORÇA DO APRENDIZADO DE PALAVRAS (🧠) (<span id="valPesoAprendizado">2</span>x)</label>
+          <input type="range" id="rangeAprendizado" min="0" max="10" step="1" value="2" style="width:100%; margin-bottom:15px;">
+          
+          <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0; margin-bottom:0;">
+            Ajusta o impacto dos votos. Quando você marca 👍, o Oráculo também decora as palavras da pesquisa com a força definida acima.
           </p>
         </div>
       </details>
@@ -1001,7 +1005,35 @@
           <div id="areaStopwords" class="chip-container" style="overflow-y: auto; max-height: 35vh;"></div>
         </div>
       </details>
+      <!-- Painel de Intenções Naturais -->
+      <details class="config-group">
+        <summary>
+          <span>🗣️ Tradução de Intenções (+ / -)</span>
+          <div style="display:flex; gap:12px; align-items:center;">
+            <button id="btnResetIntencoes" class="btn-link" style="color:var(--danger); font-size:0.75rem; padding:0;">Restaurar</button>
+            <span class="seta">▼</span>
+          </div>
+        </summary>
+        <div class="card-body">
+          <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:15px; margin-top:0;">
+            O Oráculo transforma suas frases naturais em comandos matemáticos automáticos ao pesquisar.
+          </p>
 
+          <label class="field-label" style="color: #28a745;">GATILHOS DE OBRIGAÇÃO (+) <span style="font-weight:normal; text-transform:none;">(Ex: "somente carro" ➔ "+carro")</span></label>
+          <div style="display:flex; gap:8px; margin-bottom:8px;">
+            <input type="text" id="inputGatilhoObrig" placeholder="Ex: apenas" style="flex:1;">
+            <button id="btnAddGatilhoObrig" class="btn btn-small">+</button>
+          </div>
+          <div id="areaGatilhosObrig" class="chip-container" style="margin-bottom: 25px; overflow-y: auto; max-height: 20vh;"></div>
+
+          <label class="field-label" style="color: #dc3545;">GATILHOS DE VETO (-) <span style="font-weight:normal; text-transform:none;">(Ex: "sem moto" ➔ "-moto")</span></label>
+          <div style="display:flex; gap:8px; margin-bottom:8px;">
+            <input type="text" id="inputGatilhoVeto" placeholder="Ex: nada de" style="flex:1;">
+            <button id="btnAddGatilhoVeto" class="btn btn-small">+</button>
+          </div>
+          <div id="areaGatilhosVeto" class="chip-container" style="overflow-y: auto; max-height: 20vh;"></div>
+        </div>
+      </details>
       <details class="config-group">
         <summary>
           <span>🔗 Dicionário de Sinônimos</span>
@@ -1014,7 +1046,7 @@
           <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
             <input type="text" id="inputSinonimoDe" placeholder="Se digitar (Ex: bateria arriada)">
             <div style="display:flex; gap:8px;">
-              <input type="text" id="inputSinonimoPara" placeholder="Mudar para (Ex: falha_partida)" style="flex:1;">
+              <input type="text" id="inputSinonimoPara" placeholder="Ex: falha_partida ou varios significados separados por espaço" style="flex:1;">
               <button id="btnAddSinonimo" class="btn btn-small">+</button>
             </div>
           </div>
@@ -1200,6 +1232,9 @@ var configPadrao = {
   pesoVotoNegativo: 3.0, // <-- NOVO PESO DE VOTOS 👎
   limiarDuvida: 60,      // <-- NOVO: % que dispara a pergunta de dúvida
   limiarCobertura: 40,   // <-- NOVO: % que dispara a pergunta de cobertura
+  pesoAprendizado: 2.0,
+  gatilhosObrigatorios: ['somente', 'apenas', 'com certeza', 'exclusivamente', 'tem que ter'],
+  gatilhosVeto: ['não é', 'nao e', 'sem', 'nada de', 'exceto', 'menos'],
   stopwords: ['a','o','as','os','um','uma','de','do','da','em','no','na','por','pra','para','com','e','ou','que','é','foi','ser','esta','este','isso','como','mais','muito','já','só','até','entre','sobre','depois','antes','quando','onde','porque','mas','então','assim','cada','todo','seu','sua','meu','minha','eu','ele','ela','nós','você','lhe','me','se','está','tem','há'],
   sinonimos: [
     // Exemplo inicial: mapeia uma frase para um termo de peso único
@@ -1231,6 +1266,10 @@ if(config.vozResDetalhes === undefined) config.vozResDetalhes = false;
 if(config.vozResSintomas === undefined) config.vozResSintomas = false;
 if(config.vozArqSintomas === undefined) config.vozArqSintomas = false;
 if(config.vozArqDetalhes === undefined) config.vozArqDetalhes = false;
+// Na validação para não quebrar:
+if(config.pesoAprendizado === undefined) config.pesoAprendizado = 2.0;
+if(!config.gatilhosObrigatorios) config.gatilhosObrigatorios = configPadrao.gatilhosObrigatorios.slice();
+if(!config.gatilhosVeto) config.gatilhosVeto = configPadrao.gatilhosVeto.slice();
 
 // === UI: Controle de Pesos ===
 $('rangePalavra').value = config.pesoPalavra;
@@ -1238,6 +1277,14 @@ $('valPesoPalavra').textContent = config.pesoPalavra;
 $('rangePalavra').addEventListener('input', function(e){
   config.pesoPalavra = parseFloat(e.target.value);
   $('valPesoPalavra').textContent = config.pesoPalavra;
+  salvarConfig();
+});
+// controle de dna de votaçoes
+$('rangeAprendizado').value = config.pesoAprendizado;
+$('valPesoAprendizado').textContent = config.pesoAprendizado;
+$('rangeAprendizado').addEventListener('input', function(e){
+  config.pesoAprendizado = parseFloat(e.target.value);
+  $('valPesoAprendizado').textContent = config.pesoAprendizado;
   salvarConfig();
 });
 
@@ -1422,6 +1469,65 @@ $('btnResetVoz').addEventListener('click', function(e){
     }
   });
 });
+// === UI: Tradução de Intenções ===
+function renderGatilhos() {
+  var areaO = $('areaGatilhosObrig');
+  var areaV = $('areaGatilhosVeto');
+  if(!areaO || !areaV) return;
+  areaO.innerHTML = ''; areaV.innerHTML = '';
+
+  config.gatilhosObrigatorios.forEach(function(g, index) {
+    var div = document.createElement('div'); div.className = 'chip-editavel';
+    div.innerHTML = escapeHtml(g) + ' <button data-idx="'+index+'">&times;</button>';
+    areaO.appendChild(div);
+  });
+  areaO.querySelectorAll('button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      config.gatilhosObrigatorios.splice(btn.getAttribute('data-idx'), 1);
+      salvarConfig(); renderGatilhos();
+    });
+  });
+
+  config.gatilhosVeto.forEach(function(g, index) {
+    var div = document.createElement('div'); div.className = 'chip-editavel';
+    div.innerHTML = escapeHtml(g) + ' <button data-idx="'+index+'">&times;</button>';
+    areaV.appendChild(div);
+  });
+  areaV.querySelectorAll('button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      config.gatilhosVeto.splice(btn.getAttribute('data-idx'), 1);
+      salvarConfig(); renderGatilhos();
+    });
+  });
+}
+
+$('btnAddGatilhoObrig').addEventListener('click', function(){
+  var val = $('inputGatilhoObrig').value.trim().toLowerCase();
+  if(val && !config.gatilhosObrigatorios.includes(val)) {
+    config.gatilhosObrigatorios.push(val); salvarConfig(); renderGatilhos(); $('inputGatilhoObrig').value = '';
+  }
+});
+$('btnAddGatilhoVeto').addEventListener('click', function(){
+  var val = $('inputGatilhoVeto').value.trim().toLowerCase();
+  if(val && !config.gatilhosVeto.includes(val)) {
+    config.gatilhosVeto.push(val); salvarConfig(); renderGatilhos(); $('inputGatilhoVeto').value = '';
+  }
+});
+$('inputGatilhoObrig').addEventListener('keypress', function(e){ if(e.key === 'Enter') $('btnAddGatilhoObrig').click(); });
+$('inputGatilhoVeto').addEventListener('keypress', function(e){ if(e.key === 'Enter') $('btnAddGatilhoVeto').click(); });
+
+$('btnResetIntencoes').addEventListener('click', function(e){
+  e.stopPropagation();
+  confirmar('Restaurar gatilhos de intenção para o padrão?').then(function(ok){
+    if(ok) {
+      config.gatilhosObrigatorios = configPadrao.gatilhosObrigatorios.slice();
+      config.gatilhosVeto = configPadrao.gatilhosVeto.slice();
+      salvarConfig(); renderGatilhos(); toast('Gatilhos restaurados.');
+    }
+  });
+});
+
+
 // === UI: Stopwords (Balõezinhos) ===
 function renderStopwords() {
   var area = $('areaStopwords');
@@ -1437,6 +1543,8 @@ function renderStopwords() {
       config.stopwords.splice(btn.getAttribute('data-idx'), 1);
       salvarConfig();
       renderStopwords();
+      // Chame esta função na inicialização (junto com renderStopwords();)
+      renderGatilhos();
     });
   });
 }
@@ -1519,6 +1627,8 @@ $('btnRestaurarConfig').addEventListener('click', function(){
       $('checkVozResSintomas').checked = config.vozResSintomas;
       $('checkVozArqSintomas').checked = config.vozArqSintomas;
       $('checkVozArqDetalhes').checked = config.vozArqDetalhes;
+      config.gatilhosObrigatorios = configPadrao.gatilhosObrigatorios.slice();
+      config.gatilhosVeto = configPadrao.gatilhosVeto.slice();
       renderStopwords();
       renderSinonimos();
       toast('Ajustes restaurados.');
@@ -1696,14 +1806,15 @@ var STOPWORDS = new Set([
 
 
 function aplicarSinonimos(texto) {
-  var txt = normalizar(texto);
-  // Ordena os sinônimos pelos mais longos primeiro (para que frases substituam antes de palavras soltas)
+  var txt = texto; // Mantém intacto para preservar os + e - criados na intenção
   var sins = config.sinonimos.slice().sort(function(a,b){ return b.de.length - a.de.length; });
   
   sins.forEach(function(s) {
     var deNorm = normalizar(s.de);
-    var paraNorm = normalizar(s.para).replace(/\s+/g, '_'); // Une espaços do destino com underline
-    // Usa expressão regular para substituir a palavra/frase exata
+    
+    // AGORA ACEITA VÁRIOS SIGNIFICADOS: Se houver vírgula ou espaço, ele converte em tokens separados!
+    var paraNorm = normalizar(s.para).replace(/,/g, ' ').replace(/\s+/g, ' '); 
+    
     var regex = new RegExp('\\b' + deNorm + '\\b', 'g');
     txt = txt.replace(regex, paraNorm);
   });
@@ -1730,19 +1841,21 @@ function normalizar(texto, manterBooleanos = false){
 // A função de extração agora identifica regras estritas
 function extrairTokens(texto){
   var setStopwords = new Set(config.stopwords);
-  
-  // Lista para guardar palavras com bônus (+) ou veto (-)
   var palavrasObrigatorias = new Set();
   var palavrasVetadas = new Set();
 
-  // 1. Detecta comandos booleanos ANTES da limpeza pesada e dos sinônimos
+  // 1. Limpeza mantendo os sinais de + e - criados pela "Tradução de Intenção"
   var textoComSinais = normalizar(texto, true);
-  var tokensBrutos = textoComSinais.split(' ');
-  
-  var textoLimpoBase = [];
+
+  // 2. Aplica sinônimos AGORA (assim os sinais + e - se transferem para as novas palavras automaticamente!)
+  var textoProcessado = aplicarSinonimos(textoComSinais);
+
+  // 3. Separa as palavras e identifica os booleanos
+  var tokensBrutos = textoProcessado.split(' ');
+  var palavras = [];
 
   tokensBrutos.forEach(function(token) {
-    var palavraLimpa = token.replace(/[\+\-]/g, ''); // Tira o sinal para poder comparar depois
+    var palavraLimpa = token.replace(/[\+\-]/g, ''); 
     
     if (token.startsWith('+') && palavraLimpa.length >= 2) {
       palavrasObrigatorias.add(palavraLimpa);
@@ -1750,51 +1863,31 @@ function extrairTokens(texto){
       palavrasVetadas.add(palavraLimpa);
     }
     
-    if (palavraLimpa) textoLimpoBase.push(palavraLimpa);
-  });
-
-  // 2. Reconstrói o texto sem os sinais de + e - para o motor principal
-  var textoParaProcessar = textoLimpoBase.join(' ');
-
-  // 3. Aplica sinônimos
-  var textoProcessado = aplicarSinonimos(textoParaProcessar);
-
-  // 4. Separa as palavras finais e remove stopwords
-  var palavras = textoProcessado.split(' ').filter(function(p){
-    return p.length >= 2 && !setStopwords.has(p);
+    if (palavraLimpa.length >= 2 && !setStopwords.has(palavraLimpa)) {
+       palavras.push(palavraLimpa);
+    }
   });
   
-  var mapa = new Map(); // token -> peso
+  var mapa = new Map();
   
-  // 5. Aplica os Pesos e os Modificadores Booleanos
+  // 4. Aplica os Pesos
   palavras.forEach(function(p){
     var pesoBase = config.pesoPalavra;
-    
-    // Se a palavra (ou o sinônimo dela) foi marcada com +, multiplica o peso
-    if (palavrasObrigatorias.has(p)) {
-      pesoBase *= config.multiplicadorMais;
-    }
-    
-    // Se foi marcada com -, aplica a penalidade configurada
-    if (palavrasVetadas.has(p)) {
-      pesoBase += config.punicaoMenos; // Ex: vira um número negativo forte (-10)
-    }
-
+    if (palavrasObrigatorias.has(p)) pesoBase *= config.multiplicadorMais;
+    if (palavrasVetadas.has(p)) pesoBase += config.punicaoMenos;
     mapa.set(p, (mapa.get(p) || 0) + pesoBase);
   });
   
-  // 6. Bigramas seguem a mesma regra
+  // 5. Bigramas
   for (var i = 0; i < palavras.length - 1; i++){
     var bigrama = palavras[i] + '_' + palavras[i+1];
     var pesoBi = config.pesoBigrama;
     
-    // Se o bigrama contiver uma palavra vetada, o bigrama inteiro é envenenado
     if (palavrasVetadas.has(palavras[i]) || palavrasVetadas.has(palavras[i+1])) {
        pesoBi += config.punicaoMenos;
     } 
-    // Se contiver uma palavra obrigatória, ganha impulso
     else if (palavrasObrigatorias.has(palavras[i]) || palavrasObrigatorias.has(palavras[i+1])) {
-       pesoBi *= (config.multiplicadorMais / 2); // Metade do multiplicador para não exagerar
+       pesoBi *= (config.multiplicadorMais / 2);
     }
 
     mapa.set(bigrama, (mapa.get(bigrama) || 0) + pesoBi);
@@ -1823,7 +1916,17 @@ function treinarModelo(casos){
     if (c.categoria && c.categoria.trim()) cls.categoria = c.categoria.trim();
 
     var tagsStr = (c.tags && c.tags.length) ? (' ' + c.tags.join(' ') + ' ' + c.tags.join(' ')) : '';
-    var textoTreino = (c.sintomas || '') + tagsStr;
+    
+    // NOVO: Multiplica os termos aprendidos pelo peso que você definiu nos ajustes!
+    var aprendidosStr = '';
+    if (c.termosAprendidos && c.termosAprendidos.length) {
+        var repeticoes = Math.floor(config.pesoAprendizado || 2);
+        for(var k = 0; k < repeticoes; k++){
+            aprendidosStr += ' ' + c.termosAprendidos.join(' ');
+        }
+    }
+
+    var textoTreino = (c.sintomas || '') + tagsStr + aprendidosStr;
     var tokens = extrairTokens(textoTreino); // Map<token, peso>
     tokens.forEach(function(peso, token){
       cls.contagem.set(token, (cls.contagem.get(token) || 0) + peso);
@@ -2134,6 +2237,25 @@ function mudarAba(nome){
 /* =========================================================
    Consulta / dedução
    ========================================================= */
+function traduzirIntencoes(texto) {
+    var txt = texto; 
+    var vetos = config.gatilhosVeto.slice().sort(function(a,b){ return b.length - a.length; });
+    var obrig = config.gatilhosObrigatorios.slice().sort(function(a,b){ return b.length - a.length; });
+
+    vetos.forEach(function(g) {
+        var escapeStr = g.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        var regex = new RegExp('(^|\\s)' + escapeStr + '\\s+([^\\s,.]+)', 'gi');
+        txt = txt.replace(regex, '$1-$2'); // injeta o sinal negativo
+    });
+
+    obrig.forEach(function(g) {
+        var escapeStr = g.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        var regex = new RegExp('(^|\\s)' + escapeStr + '\\s+([^\\s,.]+)', 'gi');
+        txt = txt.replace(regex, '$1+$2'); // injeta o sinal positivo
+    });
+
+    return txt;
+}
 
 function executarConsulta(){
   var texto = $('queryInput').value.trim();
@@ -2148,6 +2270,16 @@ function executarConsulta(){
     toast('Descreva os fatos antes de consultar.');
     return;
   }
+
+  // === MÁGICA DA TRADUÇÃO ACONTECE AQUI ===
+  var textoTraduzido = traduzirIntencoes(texto);
+  if (texto !== textoTraduzido) {
+      $('queryInput').value = textoTraduzido; // Altera visualmente na tela para você ver
+      texto = textoTraduzido; // Substitui para o classificador ler com os sinais (+ e -)
+      toast('O Oráculo traduziu suas intenções!');
+  }
+  // =======================================
+
   if (todosCasos.length === 0){
     area.innerHTML =
       '<div class="empty-state">' +
@@ -2474,8 +2606,24 @@ function renderResultados(resultados, textoOriginal){
       var atualizouBanco = false;
       todosCasos.forEach(function(c){
         if (normalizarChaveCausa(c.causa) === chaveCausa) {
-          if (tipo === 'acerto') c.votosPositivos = (c.votosPositivos || 0) + 1;
-          if (tipo === 'erro') c.votosNegativos = (c.votosNegativos || 0) + 1;
+          
+          if (tipo === 'acerto') {
+             c.votosPositivos = (c.votosPositivos || 0) + 1;
+             
+             // O NOVO APRENDIZADO: Injeta as palavras limpas no DNA do caso
+             c.termosAprendidos = c.termosAprendidos || [];
+             tokensQueryAtual.forEach(function(t){
+                // Só aprende palavras com mais de 3 letras e que ainda não estejam salvas
+                if (t.length > 3 && !c.termosAprendidos.includes(t)) {
+                    c.termosAprendidos.push(t);
+                }
+             });
+          }
+          
+          if (tipo === 'erro') {
+             c.votosNegativos = (c.votosNegativos || 0) + 1;
+          }
+          
           updateCaso(c); 
           atualizouBanco = true;
         }
@@ -2889,6 +3037,7 @@ $('btnConfirmExport').addEventListener('click', function(){
 });
 
 $('btnImportarTrigger').addEventListener('click', function(){ $('inputImportar').click(); });
+
 $('inputImportar').addEventListener('change', function(e){
   var file = e.target.files[0];
   if (!file) return;
@@ -2899,6 +3048,7 @@ $('inputImportar').addEventListener('change', function(e){
       if (!Array.isArray(dados)) throw new Error('formato inválido');
       var validos = dados.filter(function(d){ return d && d.causa && d.sintomas; });
       if (!validos.length) throw new Error('nenhum registro válido encontrado');
+      
       Promise.all(validos.map(function(d){
         return addCaso({
           causa: String(d.causa),
@@ -2909,7 +3059,9 @@ $('inputImportar').addEventListener('change', function(e){
           criadoEm: d.criadoEm || Date.now(),
           // Importamos o histórico de votos junto com o cartão se ele existir
           votosPositivos: Number(d.votosPositivos) || 0,
-          votosNegativos: Number(d.votosNegativos) || 0
+          votosNegativos: Number(d.votosNegativos) || 0,
+          // === A MÁGICA DA IMPORTAÇÃO DO APRENDIZADO ENTRA AQUI ===
+          termosAprendidos: Array.isArray(d.termosAprendidos) ? d.termosAprendidos.map(String) : []
         });
       })).then(function(){
         toast(validos.length + ' registro(s) importado(s).');
