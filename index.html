@@ -818,15 +818,12 @@
 
       <div class="toolbar" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
         
-        <select id="filtroCategoriaArquivo" style="flex: 0 0 auto; min-width: 80px;color: #a89c86; border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; font-family: inherit; font-size: 0.85rem; background: var(--surface);">
-          <option value="">Todas as categorias</option>
-        </select>
         <button id="btnExportar" class="btn btn-small">🢁 Exportar</button>
         <button id="btnImportarTrigger" class="btn btn-small">🡻 Importar</button>
         <input type="file" id="inputImportar" accept="application/json" style="display:none;">
       </div>
 
-      <div id="listaArquivo" style="max-height: 42vh; min-height: 41.9vh; overflow-y: auto;scrollbar-width: thin;scrollbar-color: rgb(32 27 19) rgba(255, 255, 255, .05);"></div>
+      <div id="listaArquivo" style="max-height: 42vh; min-height: 41.9vh; padding-bottom: 34px; overflow-y: auto;scrollbar-width: thin;scrollbar-color: rgb(32 27 19) rgba(255, 255, 255, .05);"></div>
       <div id="estadoVazioArquivo" class="empty-state" style="display:none;">
         <div class="empty-icon">🗂</div>
         <p>Nenhum registro arquivado ainda.<br>Adicione uma causa ou carregue exemplos de demonstração.</p>
@@ -835,7 +832,12 @@
           <button class="btn btn-small" id="btnSeedArquivo">Carregar exemplos</button>
         </div>
       </div>
+      <div class="catpes" style="display: flex; gap: 6px;">
+      <select id="filtroCategoriaArquivo" style="flex: 0; min-width: 80px;color: #a89c86; border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; font-family: inherit; font-size: 0.85rem; background: var(--surface);">
+          <option value="">Todas as categorias</option>
+        </select>
       <input type="search" id="filtroArquivo" placeholder="Pesquisar..." style="flex: 1; min-width: 120px;">
+      </div>
       <details class="info-box">
         <summary>Como funciona a dedução?</summary>
         <p>Cada registro que você arquiva vira um exemplo de treino: um nome de causa + as palavras que descrevem quando ela acontece. Ao consultar, o texto digitado é comparado, palavra por palavra e em pares de palavras (bigramas), com cada causa cadastrada, usando um classificador estatístico simples (Bayes ingênuo). O resultado é uma porcentagem relativa de o quanto os fatos descritos combinam com cada causa conhecida.</p>
