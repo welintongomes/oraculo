@@ -112,7 +112,7 @@
     border-radius:var(--radius-card);
     box-shadow:var(--shadow-card);
     padding:18px;
-    margin-bottom:16px;
+    /* margin-bottom:16px; */
     position:relative;
   }
   .card::before{
@@ -805,7 +805,7 @@
           <button id="btnSalvarCaso" class="btn-stamp">Arquivar registro</button>
         </div>
       </div>
-      <p style="font-size:.78rem;color:var(--text-muted);line-height:1.5;text-align:center;">
+      <p style="font-size:.78rem;color:var(--text-muted);text-align:center;">
         Dica: quanto mais registros com frases diferentes você arquivar para a mesma causa, mais precisas ficam as deduções.
       </p>
     </section>
@@ -823,7 +823,7 @@
         <input type="file" id="inputImportar" accept="application/json" style="display:none;">
       </div>
 
-      <div id="listaArquivo" style="max-height: 40vh; min-height: 39.9vh; padding-bottom: 34px; overflow-y: auto;scrollbar-width: thin;scrollbar-color: rgb(32 27 19) rgba(255, 255, 255, .05);"></div>
+      <div id="listaArquivo" style="max-height: 49vh; min-height: 48.9vh; padding-bottom: 34px; overflow-y: auto;scrollbar-width: thin;scrollbar-color: rgb(32 27 19) rgba(255, 255, 255, .05);"></div>
       <div id="estadoVazioArquivo" class="empty-state" style="display:none;">
         <div class="empty-icon">🗂</div>
         <p>Nenhum registro arquivado ainda.<br>Adicione uma causa ou carregue exemplos de demonstração.</p>
@@ -839,15 +839,16 @@
       <input type="search" id="filtroArquivo" placeholder="Pesquisar..." style="flex: 1; min-width: 120px;">
       </div>
       <details class="info-box">
-        <summary>Como funciona a dedução?</summary>
+        <summary>Apagar tudo / intender Como funciona a dedução?</summary>
         <p>Cada registro que você arquiva vira um exemplo de treino: um nome de causa + as palavras que descrevem quando ela acontece. Ao consultar, o texto digitado é comparado, palavra por palavra e em pares de palavras (bigramas), com cada causa cadastrada, usando um classificador estatístico simples (Bayes ingênuo). O resultado é uma porcentagem relativa de o quanto os fatos descritos combinam com cada causa conhecida.</p>
         <p>O sistema só conhece o que você ensinou a ele. Poucos registros geram palpites fracos; uma base maior e variada gera deduções mais afiadas.</p>
         <p>Todos os dados ficam salvos apenas neste navegador, via IndexedDB — nada é enviado para fora. Exporte periodicamente um backup em JSON pelo botão "Exportar".</p>
-      </details>
-
-      <div class="danger-zone">
+        <div class="danger-zone">
         <button id="btnLimparTudo" class="btn btn-danger btn-small">Apagar todos os registros</button>
       </div>
+      </details>
+
+      
     </section>
     <section id="tab-config" class="tab-panel">
       
