@@ -305,7 +305,7 @@
 
   /* ---------- arquivo (lista) ---------- */
   .stats-bar{
-    display:flex; gap:10px; margin-bottom:16px;
+    display:flex; gap:10px; margin-bottom:8px;
   }
   .stat-box{
     flex:1;
@@ -318,7 +318,7 @@
   .stat-box .n{ font-family:var(--font-mono); font-weight:700; font-size:1.15rem; color:var(--brass-bright); }
   .stat-box .l{ font-size:.66rem; letter-spacing:.08em; color:var(--text-muted); text-transform:uppercase; margin-top:2px; }
 
-  .toolbar{ display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .toolbar{ display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
   .toolbar input[type=search]{ flex:1; min-width:120px; background:var(--board); color:var(--cream-text); border-color:var(--line); }
   .toolbar input[type=search]::placeholder{ color:var(--text-muted); }
 
@@ -823,7 +823,7 @@
         <input type="file" id="inputImportar" accept="application/json" style="display:none;">
       </div>
 
-      <div id="listaArquivo" style="max-height: 42vh; min-height: 41.9vh; padding-bottom: 34px; overflow-y: auto;scrollbar-width: thin;scrollbar-color: rgb(32 27 19) rgba(255, 255, 255, .05);"></div>
+      <div id="listaArquivo" style="max-height: 40vh; min-height: 39.9vh; padding-bottom: 34px; overflow-y: auto;scrollbar-width: thin;scrollbar-color: rgb(32 27 19) rgba(255, 255, 255, .05);"></div>
       <div id="estadoVazioArquivo" class="empty-state" style="display:none;">
         <div class="empty-icon">🗂</div>
         <p>Nenhum registro arquivado ainda.<br>Adicione uma causa ou carregue exemplos de demonstração.</p>
@@ -832,7 +832,7 @@
           <button class="btn btn-small" id="btnSeedArquivo">Carregar exemplos</button>
         </div>
       </div>
-      <div class="catpes" style="display: flex; gap: 6px;">
+      <div class="catpes" style="display: flex; gap: 6px; padding-top: 12px; ">
       <select id="filtroCategoriaArquivo" style="flex: 0; min-width: 80px;color: #a89c86; border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; font-family: inherit; font-size: 0.85rem; background: var(--surface);">
           <option value="">Todas as categorias</option>
         </select>
