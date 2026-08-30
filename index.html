@@ -1071,6 +1071,11 @@
           <p style="font-size:0.75rem; color:var(--text-muted); margin-top:5px; margin-bottom:0;">
             A inteligência repara palavras escritas erradas por aproximação matemática (Ex: "baterya" ➔ "bateria").
           </p>
+          <label class="field-label">SUAVIDADE DA PORCENTAGEM (TEMPERATURA: <span id="valTemperatura">1.0</span>x)</label>
+          <input type="range" id="rangeTemperatura" min="0.5" max="3.0" step="0.1" value="1.0" style="width:100%; margin-bottom:5px;">
+          <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:20px;">
+            1.0 é extremo (o vencedor leva quase 100%). Valores maiores (ex: 1.6) distribuem as porcentagens de forma mais justa entre os suspeitos.
+          </p>
         </div>
       </details>
 
@@ -1542,7 +1547,8 @@
       <details class="config-group ajuda-secao">
         <summary><span>🧠 Ajustes — Motores Avançados (Forense)</span> <span class="seta">▼</span></summary>
         <div class="card-body">
-          <p><strong>Índice Jaccard:</strong> penaliza causas "genéricas demais", favorecendo correspondências mais específicas (evita que uma causa muito cheia de textos sempre ganhe). Deixe em 0 para desativar.</p>
+          <p><strong>Força do Índice Jaccard (Sobreposição):</strong> Recompensa causas que "gabaretam" a sua pesquisa. Quanto maior a barra, mais o Oráculo prioriza causas que contenham <em>todas</em> as palavras que você digitou, em vez de causas que tenham apenas uma ou duas palavras muito pesadas. Não pune textos longos, então cadastre o máximo de detalhes possível!</p>
+          <p><strong>Suavidade da Porcentagem (Temperatura):</strong> Controla o comportamento matemático da dedução. O padrão (1.0) é extremo e faz o Oráculo agir no formato "tudo ou nada", dando quase 100% ao vencedor. Aumentar esse valor (ex: 1.6) distribui as porcentagens de forma mais justa e realista entre os suspeitos.</p>
           <p><strong>BM25 / IDF (Raridade):</strong> quando ativo, palavras raras — que aparecem em poucas causas — ganham um bônus matemático maior do que palavras comuns.</p>
           <p><strong>Corretor Fuzzy:</strong> quando ativo, o Oráculo usa cálculo de distância de Levenshtein para tentar corrigir erros de digitação, aproximando-os do vocabulário conhecido (ex.: "baterya" ➔ "bateria").</p>
         </div>
@@ -1680,6 +1686,7 @@ var configPadrao = {
   multiplicadorMais: 5.0, // <-- NOVO aumenta peso ao usar +
   punicaoMenos: -10.0,    // <-- NOVO aumenta a puniçao ao usar -
   pesoJaccard: 2.0, // <-- NOVO CONTROLE JACCARD
+  temperaturaSoftmax: 1.0,
   ativarIDF: true,
   ativarFuzzy: true, // <-- NOVO CONTROLE FUZZY
   velocidadeLeitura: 1.1, // <-- NOVO VELOCIDADE ÁUDIO
@@ -1727,6 +1734,7 @@ if(config.vozResSintomas === undefined) config.vozResSintomas = false;
 if(config.vozArqSintomas === undefined) config.vozArqSintomas = false;
 if(config.vozArqDetalhes === undefined) config.vozArqDetalhes = false;
 // Na validação para não quebrar:
+if(config.temperaturaSoftmax === undefined) config.temperaturaSoftmax = 1.0;
 if(config.pesoAprendizado === undefined) config.pesoAprendizado = 2.0;
 if(!config.gatilhosObrigatorios) config.gatilhosObrigatorios = configPadrao.gatilhosObrigatorios.slice();
 if(!config.gatilhosVeto) config.gatilhosVeto = configPadrao.gatilhosVeto.slice();
@@ -1815,8 +1823,15 @@ $('rangeJaccard').addEventListener('input', function(e){
   config.pesoJaccard = parseFloat(e.target.value);
   $('valPesoJaccard').textContent = config.pesoJaccard;
   salvarConfig();
+})
+//==controles da temperatura softmax porcentagens nas deduções==
+$('rangeTemperatura').value = config.temperaturaSoftmax;
+$('valTemperatura').textContent = config.temperaturaSoftmax.toFixed(1);
+$('rangeTemperatura').addEventListener('input', function(e){
+  config.temperaturaSoftmax = parseFloat(e.target.value);
+  $('valTemperatura').textContent = config.temperaturaSoftmax.toFixed(1);
+  salvarConfig();
 });
-
 $('checkIDF').checked = config.ativarIDF;
 $('checkIDF').addEventListener('change', function(e){
   config.ativarIDF = e.target.checked;
@@ -2063,6 +2078,8 @@ $('btnRestaurarConfig').addEventListener('click', function(){
     if(ok) {
       config = JSON.parse(JSON.stringify(configPadrao));
       salvarConfig();
+      
+      // Atualiza toda a Interface visual
       $('rangePalavra').value = config.pesoPalavra;
       $('valPesoPalavra').textContent = config.pesoPalavra;
       $('rangeBigrama').value = config.pesoBigrama;
@@ -2071,13 +2088,23 @@ $('btnRestaurarConfig').addEventListener('click', function(){
       $('valPunicaoMenos').textContent = config.punicaoMenos;
       $('rangeMultiplicadorMais').value = config.multiplicadorMais;
       $('valMultiplicadorMais').textContent = config.multiplicadorMais;
+      
       $('rangeJaccard').value = config.pesoJaccard;
       $('valPesoJaccard').textContent = config.pesoJaccard;
+      
+      // NOVO: Atualiza a Temperatura na tela
+      $('rangeTemperatura').value = config.temperaturaSoftmax;
+      $('valTemperatura').textContent = config.temperaturaSoftmax.toFixed(1);
+      
       $('rangeVotoPositivo').value = config.pesoVotoPositivo;
       $('valPesoVotoPositivo').textContent = config.pesoVotoPositivo;
       $('rangeVotoNegativo').value = config.pesoVotoNegativo;
       $('valPesoVotoNegativo').textContent = config.pesoVotoNegativo;
+      
       $('checkIDF').checked = config.ativarIDF;
+      // NOVO: Atualiza o Fuzzy na tela
+      $('checkFuzzy').checked = config.ativarFuzzy; 
+      
       $('rangeVelocidade').value = config.velocidadeLeitura;
       $('valVelocidadeLeitura').textContent = config.velocidadeLeitura.toFixed(1) + 'x';
       $('rangeLimiarCobertura').value = config.limiarCobertura;
@@ -2087,8 +2114,10 @@ $('btnRestaurarConfig').addEventListener('click', function(){
       $('checkVozResSintomas').checked = config.vozResSintomas;
       $('checkVozArqSintomas').checked = config.vozArqSintomas;
       $('checkVozArqDetalhes').checked = config.vozArqDetalhes;
+      
       config.gatilhosObrigatorios = configPadrao.gatilhosObrigatorios.slice();
       config.gatilhosVeto = configPadrao.gatilhosVeto.slice();
+      
       renderStopwords();
       renderSinonimos();
       toast('Ajustes restaurados.');
@@ -2126,17 +2155,22 @@ $('btnResetSensibilidade').addEventListener('click', function(e){
 // 2. Reset dos Motores Forenses
 $('btnResetForense').addEventListener('click', function(e){
   e.stopPropagation();
-  confirmar('Restaurar motor Jaccard e IDF para o padrão?').then(function(ok){
+  confirmar('Restaurar motores Forenses (Jaccard, IDF, Temperatura e Fuzzy) para o padrão?').then(function(ok){
     if(ok) {
       config.pesoJaccard = configPadrao.pesoJaccard;
+      config.temperaturaSoftmax = configPadrao.temperaturaSoftmax; // Atualiza a memória
       config.ativarIDF = configPadrao.ativarIDF;
       config.ativarFuzzy = configPadrao.ativarFuzzy;
       salvarConfig();
       
+      // Atualiza a interface (visual) instantaneamente
       $('rangeJaccard').value = config.pesoJaccard;
       $('valPesoJaccard').textContent = config.pesoJaccard;
+      $('rangeTemperatura').value = config.temperaturaSoftmax;
+      $('valTemperatura').textContent = config.temperaturaSoftmax.toFixed(1);
       $('checkIDF').checked = config.ativarIDF;
       $('checkFuzzy').checked = config.ativarFuzzy;
+      
       toast('Motor forense restaurado.');
     }
   });
@@ -2593,9 +2627,11 @@ function classificar(query, modelo){
 
   if (resultadosBrutos.length === 0) return [];
 
-  // 5. Softmax
+// 5. Softmax (Transforma em porcentagem com Controle de Temperatura)
+  var temp = config.temperaturaSoftmax || 1.0; // Puxa o valor do painel
+  
   var maxLog = Math.max.apply(null, resultadosBrutos.map(function(r){ return r.logScore; }));
-  var exps = resultadosBrutos.map(function(r){ return Math.exp(r.logScore - maxLog); });
+  var exps = resultadosBrutos.map(function(r){ return Math.exp((r.logScore - maxLog) / temp); });
   var soma = exps.reduce(function(a,b){ return a+b; }, 0);
   
   resultadosBrutos.forEach(function(r, i){ r.probabilidade = exps[i] / soma; });
