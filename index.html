@@ -886,7 +886,7 @@
         </div>
       </div>
 
-      <div id="areaConsulta" style="max-height: 36vh; overflow-y: auto;"></div>
+      <div id="areaConsulta" style="max-height: 38vh; overflow-y: auto; border-radius: 12px; "></div>
     </section>
 
     <section id="tab-novo" class="tab-panel">
@@ -910,7 +910,17 @@
 
           <label class="field-label" for="inputTags">PALAVRAS-CHAVE <span class="opt">(opcional, separadas por vírgula)</span></label>
           <input type="text" id="inputTags" placeholder="Ex.: bateria, arranque, clique">
+          <label class="field-label" for="inputTags">PALAVRAS-CHAVE <span class="opt">(opcional, separadas por vírgula)</span></label>
+          <input type="text" id="inputTags" placeholder="Ex.: bateria, arranque, clique">
 
+          <!-- NOVO: DNA Oculto: Só aparece na Edição -->
+          <div id="grupoTermosAprendidos" style="display: none; margin-top: 15px; margin-bottom: 5px;">
+              <label class="field-label" style="color: #9c27b0;">🧠 PALAVRAS APRENDIDAS (Geradas pelo 👍)</label>
+              <input type="text" id="inputTermosAprendidos" placeholder="Nenhuma palavra decorada ainda..." style="border-color: #9c27b0;">
+              <p style="font-size:0.75rem; color:var(--text-muted); margin-top:4px; margin-bottom:0;">
+                  Estas palavras foram injetadas via feedback. Apague ou adicione separando por vírgula.
+              </p>
+          </div>
           <label class="field-label" for="inputDetalhes">DETALHES / SOLUÇÃO <span class="opt">(opcional)</span></label>
           <textarea id="inputDetalhes" placeholder="O que fazer a respeito, observações extras..."></textarea>
 
@@ -2290,7 +2300,7 @@ function normalizar(texto, manterBooleanos = false){
   return limpo.replace(/\s+/g,' ').trim();
 }
 
-// A função de extração agora identifica regras estritas
+// A função de extração agora identifica regras estritas e organiza os bigramas
 function extrairTokens(texto){
   var setStopwords = new Set(config.stopwords);
   var palavrasObrigatorias = new Set();
@@ -2330,11 +2340,15 @@ function extrairTokens(texto){
     mapa.set(p, (mapa.get(p) || 0) + pesoBase);
   });
   
-  // 5. Bigramas
+  // 5. Bigramas Imunes à Ordem da Frase
   for (var i = 0; i < palavras.length - 1; i++){
-    var bigrama = palavras[i] + '_' + palavras[i+1];
+    // Pega as duas palavras e coloca em ordem alfabética
+    var parOrdenado = [palavras[i], palavras[i+1]].sort();
+    var bigrama = parOrdenado[0] + '_' + parOrdenado[1];
+    
     var pesoBi = config.pesoBigrama;
     
+    // Regras de veto e obrigação olham para as palavras originais
     if (palavrasVetadas.has(palavras[i]) || palavrasVetadas.has(palavras[i+1])) {
        pesoBi += config.punicaoMenos;
     } 
@@ -2466,6 +2480,9 @@ function calcularLevenshtein(a, b) {
 /* =========================================================
    Classificador Forense (Bayes + Jaccard + Booleanos + IDF + Fuzzy)
    ========================================================= */
+/* =========================================================
+   Classificador Forense (Bayes + Jaccard + Booleanos + IDF + Fuzzy)
+   ========================================================= */
 function classificar(query, modelo){
   var tokensBrutosQuery = extrairTokens(query); 
   if (tokensBrutosQuery.size === 0 || modelo.numClasses === 0) return [];
@@ -2476,17 +2493,12 @@ function classificar(query, modelo){
   tokensBrutosQuery.forEach(function(pesoBase, tokenOriginal) {
     var tokenFinal = tokenOriginal;
     
-    // Só tenta corrigir se o Fuzzy estiver ligado, se a palavra NÃO existir no banco,
-    // e se a palavra for maior que 3 letras (para não confundir abreviações curtas)
     if (config.ativarFuzzy && !modelo.vocab.has(tokenOriginal) && tokenOriginal.length > 3) {
-      
       var melhorMatch = tokenOriginal;
-      var menorDist = 2; // Distância mínima tolerada (erros pequenos)
-      // Palavras de até 5 letras perdoam 1 erro. Palavras grandes perdoam 2 erros.
+      var menorDist = 2; 
       var limiteErro = tokenOriginal.length > 5 ? 2 : 1; 
 
       modelo.vocab.forEach(function(termoVocab) {
-        // Heurística de performance: só compara palavras de tamanhos parecidos
         if (Math.abs(termoVocab.length - tokenOriginal.length) <= limiteErro) {
           var dist = calcularLevenshtein(tokenOriginal, termoVocab);
           if (dist <= limiteErro && dist < menorDist) {
@@ -2497,8 +2509,6 @@ function classificar(query, modelo){
       });
       tokenFinal = melhorMatch; 
     }
-
-    // Se o Fuzzy consertou uma palavra para uma que já existia na frase, soma os pesos
     tokensQuery.set(tokenFinal, (tokensQuery.get(tokenFinal) || 0) + pesoBase);
   });
 
@@ -2525,17 +2535,15 @@ function classificar(query, modelo){
 
   Object.keys(modelo.classes).forEach(function(chave){
     var cls = modelo.classes[chave];
-    
     var prior = (cls.numExemplos + 1) / (modelo.totalCasos + modelo.numClasses);
     var logScore = Math.log(prior);
     
     var pesoCoberto = 0;
     var pesoPenalizado = 0;
-    
     var termosDaCausaNoQuery = 0; 
     var totalTermosNaCausa = cls.contagem.size;
 
-    // 2. Compara a busca com os arquivos do Oráculo
+    // 2. Compara a busca com os arquivos
     tokensComIDF.forEach(function(pesoQuery, token){
       var count = cls.contagem.get(token) || 0;
       
@@ -2547,7 +2555,6 @@ function classificar(query, modelo){
       
       if (pesoQuery > 0) {
         var prob = (count + 1) / (cls.total + V);
-        
         logScore += pesoQuery * Math.log(prob);
         
         if (count > 0) {
@@ -2559,18 +2566,18 @@ function classificar(query, modelo){
 
     if (pesoCoberto === 0 || pesoPenalizado > pesoCoberto) return; 
 
-    // 3. Fator Jaccard (Pureza Contextual)
+    // 3. Fator de Pureza Contextual: Coeficiente de Sobreposição em vez de Jaccard Clássico!
     var totalTermosUnicosQuery = Array.from(tokensComIDF.keys()).filter(t => tokensComIDF.get(t) > 0).length;
-    var uniao = (totalTermosNaCausa + totalTermosUnicosQuery) - termosDaCausaNoQuery;
-    var jaccardIndex = uniao > 0 ? (termosDaCausaNoQuery / uniao) : 0;
+    // O divisor agora é o menor dos dois, protegendo textos gigantes de serem punidos.
+    var divisor = Math.min(totalTermosNaCausa, totalTermosUnicosQuery);
+    var jaccardIndex = divisor > 0 ? (termosDaCausaNoQuery / divisor) : 0;
     
-    // Multiplica o índice de pureza pelo valor que você definiu no slider do Jaccard
     logScore += (jaccardIndex * config.pesoJaccard);
     
-    // 3.5 Boost de Aprendizado por Feedback (confirmações que você já deu ao Oráculo)
+    // 3.5 Boost de Aprendizado por Feedback
     logScore += calcularBoostFeedback(chave, tokensBrutosQuery);
     
-    // 4. Monta a lista visual de "Pistas Confirmadas"
+    // 4. Monta a lista visual
     var termosCombinados = Array.from(tokensComIDF.keys())
       .filter(function(t){ return (cls.contagem.get(t) || 0) > 0 && tokensComIDF.get(t) > 0; })
       .sort(function(a,b){ return tokensComIDF.get(b) - tokensComIDF.get(a); });
@@ -2588,7 +2595,7 @@ function classificar(query, modelo){
 
   if (resultadosBrutos.length === 0) return [];
 
-  // 5. Softmax (Transforma em porcentagem)
+  // 5. Softmax
   var maxLog = Math.max.apply(null, resultadosBrutos.map(function(r){ return r.logScore; }));
   var exps = resultadosBrutos.map(function(r){ return Math.exp(r.logScore - maxLog); });
   var soma = exps.reduce(function(a,b){ return a+b; }, 0);
@@ -2598,7 +2605,6 @@ function classificar(query, modelo){
   
   return resultadosBrutos;
 }
-
 /* =========================================================
    Cor por categoria (determinística, sem precisar salvar cor)
    ========================================================= */
@@ -2802,7 +2808,7 @@ function renderPistasVisuaisHtml(pedacos, textoStats){
 
   return (
     // BARRA COMPACTA
-    '<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.04); padding:0px 15px; border-radius:8px; margin-bottom:12px;">' +
+    '<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.04); margin-top: 12px;padding:0px 15px; border-radius:8px; margin-bottom:12px;">' +
       '<div style="font-size:0.85rem; display:flex; align-items:center; gap:8px;">' +
         '<strong style="color:var(--primary); margin:0;">VEREDICTO</strong>' +
         '<span style="color:var(--text-muted); font-size:0.75rem; border-left:1px solid rgba(0,0,0,0.1); padding-left:8px;" id="statsOraculoTexto">' + textoStats + '</span>' +
@@ -3148,18 +3154,21 @@ $('btnSalvarCaso').addEventListener('click', function(){
   var tags = $('inputTags').value.split(',').map(function(t){ return t.trim(); }).filter(Boolean);
   var detalhes = $('inputDetalhes').value.trim();
 
+  // Captura os termos aprendidos via Feedback (se existirem)
+  var termosInput = $('inputTermosAprendidos') ? $('inputTermosAprendidos').value : '';
+  var arrayAprendidos = termosInput ? termosInput.split(',').map(function(t){ return t.trim(); }).filter(function(t){ return t.length > 0; }) : [];
+
   if (!causa){ toast('Informe o nome da causa.'); $('inputCausa').focus(); return; }
   if (!sintomas){ toast('Descreva a situação / sinais observados.'); $('inputSintomas').focus(); return; }
 
-  // Caso novo já nasce preparado para receber votos!
+  // Caso novo já nasce preparado
   var caso = { 
     causa:causa, categoria:categoria, sintomas:sintomas, tags:tags, detalhes:detalhes, criadoEm:Date.now(),
-    votosPositivos: 0, votosNegativos: 0 
+    votosPositivos: 0, votosNegativos: 0, termosAprendidos: arrayAprendidos
   };
 
   var acao;
   if (editandoId !== null){
-    // Ao editar, temos o cuidado de não zerar os votos antigos
     var casoAntigo = todosCasos.find(function(c){ return c.id === editandoId; });
     caso.id = editandoId;
     if (casoAntigo) {
@@ -3178,6 +3187,7 @@ $('btnSalvarCaso').addEventListener('click', function(){
     $('inputSintomas').value = '';
     $('inputTags').value = '';
     $('inputDetalhes').value = '';
+    if($('inputTermosAprendidos')) $('inputTermosAprendidos').value = '';
     autoResize($('inputSintomas'));
     autoResize($('inputDetalhes'));
     return refreshAll();
@@ -3193,6 +3203,13 @@ function iniciarEdicao(caso){
   $('inputSintomas').value = caso.sintomas || '';
   $('inputTags').value = (caso.tags || []).join(', ');
   $('inputDetalhes').value = caso.detalhes || '';
+  
+  // NOVO: Exibe e preenche os termos aprendidos (só aparece na edição)
+  if ($('inputTermosAprendidos') && $('grupoTermosAprendidos')) {
+      $('inputTermosAprendidos').value = (caso.termosAprendidos && caso.termosAprendidos.length) ? caso.termosAprendidos.join(', ') : '';
+      $('grupoTermosAprendidos').style.display = 'block'; 
+  }
+
   $('editBanner').classList.remove('hidden');
   mudarAba('novo');
   autoResize($('inputSintomas'));
@@ -3202,7 +3219,9 @@ function iniciarEdicao(caso){
 function cancelarEdicaoUI(){
   editandoId = null;
   $('editBanner').classList.add('hidden');
+  if ($('grupoTermosAprendidos')) $('grupoTermosAprendidos').style.display = 'none';
 }
+
 $('cancelarEdicao').addEventListener('click', function(){
   cancelarEdicaoUI();
   $('inputCausa').value = '';
@@ -3210,6 +3229,7 @@ $('cancelarEdicao').addEventListener('click', function(){
   $('inputSintomas').value = '';
   $('inputTags').value = '';
   $('inputDetalhes').value = '';
+  if($('inputTermosAprendidos')) $('inputTermosAprendidos').value = '';
 });
 
 /* =========================================================
