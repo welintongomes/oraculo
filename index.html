@@ -727,6 +727,105 @@
   color: var(--text-muted);
   font-style: italic;
 }
+/* ================= Modal de Ajuda ================= */
+.modal-overlay#modalAjudaOverlay .modal.modal-ajuda{
+    width: 100%;
+    max-width: 640px;
+    max-height: 88vh;
+    height: 88vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+  }
+  .ajuda-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding: 16px 18px 12px 18px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    flex: 0 0 auto;
+  }
+  .ajuda-header h3{
+    margin:0;
+    font-size:1.1rem;
+    color: var(--primary);
+  }
+  .ajuda-header .icon-btn{
+    background: rgba(0,0,0,0.06);
+    border-radius: 8px;
+    padding: 6px;
+    transition: 0.2s;
+  }
+  /* Botão fechar vermelho ao passar o mouse ou focar */
+  .ajuda-header .icon-btn:hover, .ajuda-header .icon-btn:active {
+    background: var(--danger);
+    color: white;
+  }
+  .ajuda-search-wrap{
+    flex: 0 0 auto;
+    padding: 12px 18px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  .ajuda-search-wrap input[type="search"]{
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .ajuda-corpo{
+    scrollbar-width: thin;
+    scrollbar-color: rgb(32 27 19) rgba(255, 255, 255, .05);
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 14px 18px 24px 18px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ajuda-corpo .config-group{
+    margin-bottom: 10px;
+  }
+  .ajuda-corpo .card-body p{
+    font-size: 0.85rem;
+    line-height: 1.55;
+    margin: 0 0 10px 0;
+  }
+  .ajuda-corpo .card-body ul{
+    margin: 0 0 10px 0;
+    padding-left: 1.15rem;
+    font-size: 0.85rem;
+    line-height: 1.55;
+  }
+  .ajuda-corpo .card-body li{
+    margin-bottom: 6px;
+  }
+  .ajuda-corpo .card-body p:last-child,
+  .ajuda-corpo .card-body ul:last-child{
+    margin-bottom: 0;
+  }
+  .ajuda-intro{
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin: 0 0 14px 0;
+  }
+  #ajudaSemResultado{
+    text-align:center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding: 30px 10px;
+  }
+  @media (max-width: 640px){
+    .modal-overlay#modalAjudaOverlay .modal.modal-ajuda{
+      max-width: 100%;
+      width: 100%;
+      height: 87%;
+      max-height: 100%;
+      border-radius: 20px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -739,6 +838,9 @@
         <h1 class="app-title" style="margin: 0; font-size: 1.25rem;">Oráculo</h1>
         <button id="btnToggleVoz" class="icon-btn" aria-label="Ativar Voz" style="background:rgba(0,0,0,0.06); color:#333; border-radius:8px; padding: 6px; transition: 0.3s;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+        </button>
+        <button id="btnAjuda" class="icon-btn" aria-label="Ajuda / Como usar" style="background:rgba(0,0,0,0.06); color: #ffb91c; border-radius:8px; padding: 6px; transition: 0.3s;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </button>
       </div>
 
@@ -1132,6 +1234,154 @@
     <div class="modal-actions" style="margin-top: 20px;">
       <button id="btnCancelExport" class="btn btn-ghost">Cancelar</button>
       <button id="btnConfirmExport" class="btn btn-stamp">Salvar Arquivo</button>
+    </div>
+  </div>
+</div>
+<div id="modalAjudaOverlay" class="modal-overlay hidden">
+  <div class="modal modal-ajuda">
+    <div class="ajuda-header">
+      <h3>❓ Como usar o Oráculo</h3>
+      <button id="btnFecharAjuda" class="icon-btn" aria-label="Fechar ajuda" style="color: var(--danger);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="ajuda-search-wrap">
+      <input type="search" id="inputBuscaAjuda" placeholder="🔍 Pesquisar na ajuda... ex: exportar, votos, sinônimos">
+    </div>
+    
+    <!-- O texto do "Sem resultado" agora fica DENTRO do corpo, mas invisível por padrão -->
+    <div class="ajuda-corpo" id="ajudaCorpo">
+      <p class="ajuda-intro">Toque numa pergunta para expandir, ou use a busca acima.</p>
+      
+      <div id="ajudaSemResultado" style="display:none;">Nenhum resultado encontrado. Tente outra palavra.</div>
+
+      <details class="config-group ajuda-secao">
+        <summary><span>🔮 O que é o Oráculo?</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <p>O Oráculo é um detetive de causas: você ensina exemplos de situações reais (sintomas) ligados a uma causa, e ele aprende a reconhecer padrões nas suas próprias palavras para fazer deduções.</p>
+          <p>Quanto mais registros variados você arquivar para a mesma causa, mais afiadas ficam as deduções — o Oráculo só conhece o que <strong>você</strong> ensinou a ele.</p>
+          <p>Tudo fica salvo apenas neste navegador (IndexedDB); nada é enviado para fora. Faça backups periódicos exportando um arquivo JSON na aba Arquivo.</p>
+        </div>
+      </details>
+
+      <details class="config-group ajuda-secao">
+        <summary><span>🔍 Aba Deduzir — como pesquisar</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <p>Escreva o que está observando, com suas próprias palavras, em <strong>"Descreva os fatos"</strong> e toque em <strong>Deduzir</strong>.</p>
+          <p><strong>🕵️ Explorar Pistas Rápidas:</strong> abra este painel, escolha uma categoria e toque nas palavras-chave já cadastradas. Cada toque adiciona (+) ou remove (–) aquele termo do seu texto automaticamente.</p>
+          <p><strong>Comandos de intenção:</strong> algumas expressões viram regras matemáticas sozinhas ao consultar:</p>
+          <ul>
+            <li>Frases como <em>"somente"</em> ou <em>"apenas"</em> antes de uma palavra marcam ela como <strong>obrigatória (+)</strong> — causas sem esse termo saem da lista.</li>
+            <li>Frases como <em>"sem"</em>, <em>"nada de"</em> ou <em>"exceto"</em> marcam a palavra como <strong>veto (–)</strong> — causas com esse termo são descartadas ou penalizadas.</li>
+          </ul>
+          <p>Você pode editar essas expressões-gatilho em <strong>Ajustes → Tradução de Intenções</strong>. Toque em <strong>Limpar</strong>, dentro do painel de pistas, para apagar o texto e recomeçar.</p>
+        </div>
+      </details>
+
+      <details class="config-group ajuda-secao">
+        <summary><span>📊 Entendendo o resultado da dedução</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <p>Cada card mostra um carimbo de porcentagem (a probabilidade daquela causa explicar os fatos); a cor do card indica o nível de confiança: alta, média ou baixa.</p>
+          <p>A barra <strong>VEREDICTO</strong> no topo tem um ícone 💡 — toque nele para ver, palavra por palavra, como o Oráculo leu seu texto: o que <strong>confirmou</strong> a causa, o que você marcou como <strong>obrigatório (+)</strong> e o que você <strong>vetou (–)</strong>.</p>
+          <p>Abaixo do nome da causa aparecem os indícios confirmados (chips) e a % de cobertura dos sintomas descritos. <strong>Ver detalhes</strong> mostra as anotações/solução daquela causa. <strong>📋 Copiar Resposta</strong> copia um resumo pronto para colar em outro lugar.</p>
+          <p><strong>👍 / 👎 "O Oráculo acertou?"</strong> — vote no resultado! Isso ajusta o saldo de confiança da causa e, em caso de acerto, injeta as palavras que você usou na pesquisa direto no DNA do registro como novo aprendizado. Ajuste a força desse aprendizado em <strong>Ajustes → Peso do Feedback</strong>.</p>
+          <p>Quando a certeza estiver baixa, aparece um aviso e o Oráculo pode sugerir uma pista extra — toque em <strong>Sim, adicionar aos fatos</strong> para incluir o termo na busca e consultar de novo.</p>
+        </div>
+      </details>
+
+      <details class="config-group ajuda-secao">
+        <summary><span>📝 Aba Novo — cadastrar e editar causas</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <p>Aqui você ensina o Oráculo. Preencha:</p>
+          <ul>
+            <li><strong>Nome da causa*</strong> — o "veredicto" que aparece nos resultados (ex: "Bateria do carro fraca").</li>
+            <li><strong>Categoria</strong> (opcional) — agrupa causas parecidas (Carro, Saúde, Casa...) e é usada nos filtros, na exportação seletiva e no painel Explorar Pistas Rápidas.</li>
+            <li><strong>Situação / sinais observados*</strong> — descreva com suas palavras o que costuma acontecer. É este texto que <strong>treina</strong> o classificador; quanto mais exemplos com frases diferentes, melhor.</li>
+            <li><strong>Palavras-chave</strong> (opcional) — termos separados por vírgula que reforçam a identificação e alimentam o Explorar Pistas Rápidas.</li>
+            <li><strong>Detalhes / solução</strong> (opcional) — o que fazer a respeito; aparece em "Ver detalhes" nos resultados.</li>
+          </ul>
+          <p>Toque em <strong>Arquivar registro</strong> para salvar.</p>
+          <p><strong>Editar um registro existente:</strong> na aba Arquivo, toque no ícone de lápis ✏️ de qualquer item. O formulário é preenchido automaticamente e um aviso "Editando um registro existente" aparece no topo — toque em <strong>cancelar</strong> para desistir sem salvar.</p>
+        </div>
+      </details>
+
+      <details class="config-group ajuda-secao">
+        <summary><span>🗂 Aba Arquivo — organizar, buscar e ler registros</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <p>Aqui ficam todos os registros, agrupados por causa. A barra no topo mostra quantos <strong>registros</strong> e <strong>causas</strong> diferentes você já cadastrou.</p>
+          <p><strong>Pesquisar:</strong> a caixa de busca filtra por nome da causa ou pelo texto dos sintomas; o seletor ao lado filtra por categoria.</p>
+          <p>Toque no cabeçalho de um grupo para expandir e ver os registros individuais.</p>
+          <p><strong>Modo Leitura (Áudio desligado):</strong> Ao expandir um grupo, se o áudio estiver desativado, você pode clicar nos textos longos para expandi-los e ler confortavelmente na tela. Clicando no ícone do olhinho (👁️), você expande também a solução daquele registro.</p>
+          <p><strong>Exportar:</strong> abre a janela "Exportar Cartucho", onde você escolhe um nome de arquivo e marca quais categorias entram no backup — só o que estiver marcado vai para o arquivo .json (incluindo as palavras aprendidas com o botão 👍).</p>
+          <p><strong>Importar:</strong> carrega um arquivo .json exportado e adiciona os registros dele ao seu arquivo, preservando todo o aprendizado e histórico.</p>
+        </div>
+      </details>
+
+      <details class="config-group ajuda-secao">
+        <summary><span>🔮 Ajustes — Curiosidade do Oráculo</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <p><strong>Gatilho de dúvida:</strong> se a certeza da hipótese principal ficar abaixo dessa porcentagem, o Oráculo mostra um aviso de confiança fraca. Deixe em 0 para desativar.</p>
+          <p><strong>Gatilho de cobertura:</strong> mesma ideia, mas baseado na % de indícios confirmados (cobertura), não na certeza final da causa.</p>
+        </div>
+      </details>
+
+      <details class="config-group ajuda-secao">
+        <summary><span>🎛️ Ajustes — Sensibilidade Base</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <p><strong>Peso da palavra solta</strong> e <strong>peso do bigrama</strong> controlam a importância de palavras isoladas versus pares de palavras consecutivas na comparação.</p>
+          <p><strong>Multiplicador de obrigação [+]</strong> — o quanto uma palavra marcada como obrigatória pesa a mais.</p>
+          <p><strong>Punição de veto [-]</strong> — o quanto uma palavra vetada derruba a pontuação de uma causa.</p>
+        </div>
+      </details>
+
+      <details class="config-group ajuda-secao">
+        <summary><span>⚖️ Ajustes — Peso do Feedback (Votos e Aprendizado)</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <p><strong>Força do voto positivo/negativo</strong> — o quanto cada 👍/👎 dado nos resultados influencia o saldo de confiança numérico exibido na causa.</p>
+          <p><strong>Força do aprendizado de palavras (🧠)</strong> — quando você marca 👍 em uma pesquisa, as palavras que você digitou são injetadas no "DNA" do registro. O valor deste slider define o multiplicador matemático que essas palavras ganham no cérebro do Oráculo.</p>
+        </div>
+      </details>
+
+      <details class="config-group ajuda-secao">
+        <summary><span>🧠 Ajustes — Motores Avançados (Forense)</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <p><strong>Índice Jaccard:</strong> penaliza causas "genéricas demais", favorecendo correspondências mais específicas (evita que uma causa muito cheia de textos sempre ganhe). Deixe em 0 para desativar.</p>
+          <p><strong>BM25 / IDF (Raridade):</strong> quando ativo, palavras raras — que aparecem em poucas causas — ganham um bônus matemático maior do que palavras comuns.</p>
+          <p><strong>Corretor Fuzzy:</strong> quando ativo, o Oráculo usa cálculo de distância de Levenshtein para tentar corrigir erros de digitação, aproximando-os do vocabulário conhecido (ex.: "baterya" ➔ "bateria").</p>
+        </div>
+      </details>
+
+      <details class="config-group ajuda-secao">
+        <summary><span>🔊 Ajustes — Voz do Oráculo</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <p><strong>Velocidade de leitura</strong> controla a agilidade da narração por voz.</p>
+          <p>Os 5 checkboxes definem exatamente o que é lido em voz alta. Na aba Deduzir: você pode ligar/desligar a porcentagem, histórico de sintomas e os detalhes. Na aba Arquivo: você escolhe se ele lê os sintomas e os detalhes de cada registro.</p>
+        </div>
+      </details>
+
+      <details class="config-group ajuda-secao">
+        <summary><span>🗣️ Ajustes — Tradução de Intenções (+ / -)</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <p>Aqui você edita quais expressões (ex: "apenas" ou "sem") viram automaticamente sinais matemáticos de obrigação (+) ou veto (–) quando você digita uma frase natural na busca.</p>
+        </div>
+      </details>
+
+      <details class="config-group ajuda-secao">
+        <summary><span>🔗 Ajustes — Dicionário de Sinônimos</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <p>Ensine o Oráculo a tratar palavras diferentes como a mesma coisa: no campo "Se digitar", coloque a expressão (ex: dor). No campo "Para", coloque os múltiplos significados que ela pode assumir (ex: enxaqueca sofrimento agonia), separados por espaço.</p>
+        </div>
+      </details>
+
+      <details class="config-group ajuda-secao">
+        <summary><span>🔊 Como usar a leitura em voz alta</span> <span class="seta">▼</span></summary>
+        <div class="card-body">
+          <p>O ícone 🔊 no topo ativa o <strong>modo Locutor</strong>. A tela do seu celular permanecerá acesa e bloqueada enquanto ele estiver falando (Wake Lock).</p>
+          <p><strong>Na aba Deduzir:</strong> toque em qualquer card de resultado para o Oráculo ler o veredicto daquele card e as notas de solução (se configuradas).</p>
+          <p><strong>Na aba Arquivo (Barreira de Categoria):</strong> se você deixar a pesquisa em "Todas as categorias" e der o play num item, ele lerá a lista inteira até o final. Se você selecionar uma categoria específica no select e der o play, o locutor lerá apenas os itens daquela categoria e parará educadamente ao terminar.</p>
+          <p>Toque novamente em qualquer lugar da tela enquanto ele estiver falando para pausar o locutor imediatamente.</p>
+        </div>
+      </details>
     </div>
   </div>
 </div>
@@ -2873,16 +3123,38 @@ function renderizarProximoLote() {
       '<div class="grupo-itens">';
 
     g.itens.forEach(function(it){
-      var trecho = (it.sintomas || '').slice(0, 90);
-      html += '<div class="item-linha">' +
-        '<div class="item-texto">' + escapeHtml(trecho) + (it.sintomas.length>90?'…':'') + '</div>' +
+      // === PREPARAÇÃO DO TEXTO EXPANSÍVEL ===
+      var textoLimpo = it.sintomas || '';
+      var isLong = textoLimpo.length > 90;
+      var shortText = escapeHtml(textoLimpo.slice(0, 90)) + (isLong ? '…' : '');
+      var fullText = escapeHtml(textoLimpo);
+      
+      // Prepara o texto da solução
+      var textoSolucao = it.detalhes || 'Nenhuma solução ou detalhe registrado.';
+      var fullSolucao = escapeHtml(textoSolucao);
+
+      // A linha ganha flex-wrap:wrap para a solução conseguir pular para a linha de baixo
+      html += '<div class="item-linha" style="flex-wrap: wrap;">' + 
+        '<div class="item-texto ' + (isLong ? 'texto-expansivel' : '') + '" ' + 
+             (isLong ? 'style="cursor:pointer;" title="Toque para ler completo"' : '') + '>' +
+          '<span class="txt-curto">' + shortText + '</span>' +
+          '<span class="txt-completo" style="display:none;">' + fullText + '</span>' +
+        '</div>' +
         '<div class="item-acoes">' +
+          // NOVO: BOTÃO DO OLHINHO
+          '<button class="icon-btn" data-solucao-btn="' + it.id + '" aria-label="Ver Solução" title="Ver Solução">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+          '</button>' +
           '<button class="icon-btn" data-editar="' + it.id + '" aria-label="Editar">' +
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>' +
           '</button>' +
           '<button class="icon-btn danger" data-excluir="' + it.id + '" aria-label="Excluir">' +
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>' +
           '</button>' +
+        '</div>' +
+        // NOVO: ÁREA DA SOLUÇÃO (escondida por padrão)
+        '<div class="item-solucao-oculta" style="display:none; width:100%; margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.05); font-size:0.8rem; color:var(--text-muted);">' +
+           '<strong>Solução:</strong> ' + fullSolucao +
         '</div>' +
       '</div>';
     });
@@ -2891,12 +3163,66 @@ function renderizarProximoLote() {
 
   fragmentoTemp.innerHTML = html;
 
+  // 1. NOVA LÓGICA DA SANFONA: Fechar as outras Causas antes de abrir
   fragmentoTemp.querySelectorAll('[data-toggle]').forEach(function(btn){
     btn.addEventListener('click', function(e){
       e.stopPropagation(); 
-      btn.closest('.grupo').classList.toggle('open');
+      var meuGrupo = btn.closest('.grupo');
+      var estaAberto = meuGrupo.classList.contains('open');
+
+      // Procura se tem algum grupo aberto no arquivo e fecha
+      document.querySelectorAll('#listaArquivo .grupo.open').forEach(function(g){
+        if (g !== meuGrupo) g.classList.remove('open');
+      });
+
+      // Alterna o que foi clicado
+      if (!estaAberto) {
+          meuGrupo.classList.add('open');
+      } else {
+          meuGrupo.classList.remove('open');
+      }
     });
   });
+
+  // 2. Expansão dos Sintomas (Livre para múltiplos abertos)
+  fragmentoTemp.querySelectorAll('.texto-expansivel').forEach(function(el){
+    el.addEventListener('click', function(e){
+      if (!vozAtivada) {
+        e.stopPropagation(); 
+        var curto = this.querySelector('.txt-curto');
+        var completo = this.querySelector('.txt-completo');
+        
+        if (completo.style.display === 'none') {
+            curto.style.display = 'none';
+            completo.style.display = 'inline';
+        } else {
+            curto.style.display = 'inline';
+            completo.style.display = 'none';
+        }
+      }
+    });
+  });
+
+  // 3. NOVO: Expansão da Solução pelo Olhinho
+  fragmentoTemp.querySelectorAll('[data-solucao-btn]').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      if (!vozAtivada) {
+        e.stopPropagation(); // Trava para não tocar o áudio da linha
+        var linha = this.closest('.item-linha');
+        var divSolucao = linha.querySelector('.item-solucao-oculta');
+        
+        if (divSolucao.style.display === 'none') {
+            divSolucao.style.display = 'block';
+            this.style.color = 'var(--primary)'; // Destaca o olhinho em azul/cor principal
+        } else {
+            divSolucao.style.display = 'none';
+            this.style.color = ''; // Volta à cor natural
+        }
+      }
+    });
+  });
+
+  // 4. Edição
   fragmentoTemp.querySelectorAll('[data-editar]').forEach(function(btn){
     btn.addEventListener('click', function(e){
       e.stopPropagation(); 
@@ -2905,6 +3231,8 @@ function renderizarProximoLote() {
       if (caso) iniciarEdicao(caso);
     });
   });
+
+  // 5. Exclusão
   fragmentoTemp.querySelectorAll('[data-excluir]').forEach(function(btn){
     btn.addEventListener('click', function(e){
       e.stopPropagation(); 
@@ -2941,6 +3269,7 @@ function renderizarProximoLote() {
     sentinelaObserver.observe(sentinela);
   }
 }
+
 $('btnIrNovoDeArquivo').addEventListener('click', function(){ mudarAba('novo'); });
 $('btnSeedArquivo').addEventListener('click', carregarExemplos);
 
@@ -3279,8 +3608,21 @@ function tocarChime(){
 }
 
 window.tocarCard = function(fonte, indexClicado) {
-  if (!vozAtivada) return;
+  // === MELHORIA 1: Ações visuais se a voz estiver DESLIGADA ===
+  if (!vozAtivada) {
+      if (fonte === 'arquivo') {
+          // Se estiver na aba Arquivo, abre/fecha o card (sanfona)
+          var cardArquivo = document.querySelector('.grupo[data-g="' + indexClicado + '"]');
+          if (cardArquivo) cardArquivo.classList.toggle('open');
+      } else if (fonte === 'resultados') {
+          // Se estiver na aba Deduzir, abre/fecha os detalhes (se houver)
+          var btnDetalhes = document.querySelector('.detalhes-toggle[data-idx="' + indexClicado + '"]');
+          if (btnDetalhes) btnDetalhes.click();
+      }
+      return; // Para por aqui, pois não vamos ler nada
+  }
 
+  // === LÓGICA DA VOZ (Se estiver ligada) ===
   if (synth.speaking) {
     synth.cancel();
     liberarTela();
@@ -3293,12 +3635,19 @@ window.tocarCard = function(fonte, indexClicado) {
 
   var fila = [];
   
-  // Barreira Inteligente (Funciona apenas no Arquivo)
+  // === MELHORIA 2: Modo Leitura Contínua (Ignora barreiras se estiver em "Todas") ===
+  var selectCat = document.getElementById('filtroCategoriaArquivo');
+  var ignorarBarreira = selectCat ? (selectCat.value === '') : false;
+
   if (fonte === 'arquivo') {
       var categoriaAlvo = itemClicado.categoria;
       for (var i = indexClicado; i < playlist.length; i++) {
           if (!playlist[i]) continue;
-          if (playlist[i].categoria !== categoriaAlvo) break; 
+          
+          // Se NÃO mandamos ignorar a barreira e a categoria mudou, ele para.
+          // Mas se estiver em "Todas as categorias", ele continua varrendo a lista inteira!
+          if (!ignorarBarreira && playlist[i].categoria !== categoriaAlvo) break; 
+          
           fila.push(playlist[i]);
       }
   } else {
@@ -3368,6 +3717,84 @@ window.tocarCard = function(fonte, indexClicado) {
     synth.speak(utterance);
   });
 };
+/* =========================================================
+   Modal de Ajuda — abrir/fechar e busca ao vivo
+   ========================================================= */
+function normalizarBuscaAjuda(s){
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+}
+
+function abrirModalAjuda(){
+  var overlay = $('modalAjudaOverlay');
+  overlay.classList.remove('hidden');
+  $('inputBuscaAjuda').value = '';
+  filtrarAjuda('');
+  
+  // Pequeno delay para garantir que o modal renderizou antes de focar
+  setTimeout(function(){ 
+      var input = $('inputBuscaAjuda');
+      if (input) input.focus(); 
+  }, 100);
+}
+
+function fecharModalAjuda(){
+  $('modalAjudaOverlay').classList.add('hidden');
+}
+
+function filtrarAjuda(termo){
+  var termoNorm = normalizarBuscaAjuda(termo);
+  var secoes = document.querySelectorAll('#ajudaCorpo .ajuda-secao');
+  var algumaVisivel = false;
+  
+  var msgSemResultado = document.getElementById('ajudaSemResultado');
+  var intro = document.querySelector('#ajudaCorpo .ajuda-intro');
+
+  // A mágica: só tenta filtrar se tiver digitado pelo menos 2 letras (Evita quebrar a cada teclada)
+  if (termoNorm && termoNorm.length < 2) {
+      return; 
+  }
+
+  secoes.forEach(function(sec){
+    var textoSecao = normalizarBuscaAjuda(sec.textContent);
+    var bate = !termoNorm || textoSecao.indexOf(termoNorm) !== -1;
+    
+    sec.style.display = bate ? 'block' : 'none';
+    
+    if (bate){
+      algumaVisivel = true;
+      if (termoNorm) {
+          sec.setAttribute('open', ''); // Abre as sanfonas automaticamente se achou
+      } else {
+          sec.removeAttribute('open'); // Fecha todas se limpou a busca
+      }
+    }
+  });
+
+  if (intro) intro.style.display = termoNorm ? 'none' : 'block';
+  
+  if (msgSemResultado) {
+      msgSemResultado.style.display = (termoNorm && !algumaVisivel) ? 'block' : 'none';
+  }
+}
+
+$('btnAjuda').addEventListener('click', abrirModalAjuda);
+$('btnFecharAjuda').addEventListener('click', fecharModalAjuda);
+
+$('modalAjudaOverlay').addEventListener('click', function(e){
+  // Fecha se clicar fora do modal
+  if (e.target === this) fecharModalAjuda();
+});
+
+$('inputBuscaAjuda').addEventListener('input', function(e){
+  filtrarAjuda(e.target.value);
+});
+
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && !$('modalAjudaOverlay').classList.contains('hidden')){
+    fecharModalAjuda();
+  }
+});
+
 /* =========================================================
    Atualização geral de estado e Recálculo do Cérebro
    ========================================================= */
