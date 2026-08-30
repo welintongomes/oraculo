@@ -1258,10 +1258,199 @@
       <details class="config-group ajuda-secao">
         <summary><span>🔮 O que é o Oráculo?</span> <span class="seta">▼</span></summary>
         <div class="card-body">
-          <p>O Oráculo é um detetive de causas: você ensina exemplos de situações reais (sintomas) ligados a uma causa, e ele aprende a reconhecer padrões nas suas próprias palavras para fazer deduções.</p>
-          <p>Quanto mais registros variados você arquivar para a mesma causa, mais afiadas ficam as deduções — o Oráculo só conhece o que <strong>você</strong> ensinou a ele.</p>
-          <p>Tudo fica salvo apenas neste navegador (IndexedDB); nada é enviado para fora. Faça backups periódicos exportando um arquivo JSON na aba Arquivo.</p>
-        </div>
+
+  <p>
+    O Oráculo é um detetive de causas: você ensina exemplos de situações reais
+    (sintomas) ligados a uma causa, e ele aprende a reconhecer padrões nas suas
+    próprias palavras para fazer deduções.
+  </p>
+
+  <p>
+    Quanto mais registros variados você arquivar para a mesma causa, mais afiadas
+    ficam as deduções — o Oráculo só conhece o que <strong>você</strong> ensinou a ele.
+  </p>
+
+  <p>
+    Tudo fica salvo apenas neste navegador (IndexedDB); nada é enviado para fora.
+    Faça backups periódicos exportando um arquivo JSON na aba <strong>Arquivo</strong>.
+  </p>
+
+  <hr>
+
+  <h4>1. NOME DA CAUSA</h4>
+
+  <p>
+    <strong>Peso na Dedução: 0 (Zero)</strong>
+  </p>
+
+  <p>
+    <strong>O que ele é:</strong> É o <strong>Rótulo (O Veredicto)</strong>.
+  </p>
+
+  <p>
+    <strong>Como funciona:</strong> O Oráculo não lê o nome da causa para tentar
+    adivinhar a sua pesquisa. Se a causa se chama
+    <strong>"Bateria Queimada"</strong>, pesquisar a palavra
+    <strong>"bateria"</strong> não vai puxar esse registro a menos que a palavra
+    "bateria" esteja escrita nos sinais observados.
+  </p>
+
+  <p>
+    O Nome é apenas a <strong>resposta final</strong> que ele mostra na tela
+    quando acha a solução.
+  </p>
+
+
+  <h4>2. CATEGORIA <small>(opcional)</small></h4>
+
+  <p>
+    <strong>Peso na Dedução: 0 (Zero)</strong>
+  </p>
+
+  <p>
+    <strong>O que ela é:</strong> É a <strong>Gaveta</strong>.
+  </p>
+
+  <p>
+    <strong>Como funciona:</strong> Serve estritamente para organização visual,
+    filtros na aba Arquivo e para exportar seus backups separadamente.
+  </p>
+
+  <p>
+    Na hora do cálculo matemático puro da dedução, a categoria é
+    <strong>invisível para a inteligência</strong>.
+  </p>
+
+
+  <h4>3. SITUAÇÃO / SINAIS OBSERVADOS</h4>
+
+  <p>
+    <strong>Peso na Dedução: Máximo (A Força Motriz)</strong>
+  </p>
+
+  <p>
+    <strong>O que ele é:</strong> É o <strong>Motor Principal</strong>.
+  </p>
+
+  <p>
+    <strong>Como funciona:</strong> É aqui que o
+    <strong>TF-IDF (Raridade)</strong>, o <strong>Índice Jaccard</strong> e os
+    <strong>Bigramas (palavras casadas)</strong> fazem a festa.
+  </p>
+
+  <p>
+    Cada palavra que você escreve aqui ganha um peso matemático. Se uma palavra
+    é muito rara no seu banco de dados inteiro (ex: <strong>"estalo"</strong>),
+    ela ganha um peso gigantesco.
+  </p>
+
+  <p>
+    É neste campo que a sua <strong>linguagem natural do dia a dia</strong>
+    brilha.
+  </p>
+
+
+  <h4>4. PALAVRAS-CHAVE <small>(opcional)</small></h4>
+
+  <p>
+    <strong>Peso na Dedução: Peso Duplo / Reforçado</strong>
+  </p>
+
+  <p>
+    <strong>O que ele é:</strong> É o <strong>Atalho (Hyperlink)</strong>.
+  </p>
+
+  <p>
+    <strong>Como funciona:</strong> As tags que você coloca aqui são injetadas
+    direto no motor de probabilidade, mas com uma vantagem: no código que
+    montamos, as palavras-chave entram com
+    <strong>força dobrada/concentrada</strong> no treinamento.
+  </p>
+
+  <p>
+    Além disso, elas alimentam aquele botão mágico
+    <strong>"Explorar Pistas Rápidas"</strong>.
+  </p>
+
+  <p>
+    Se você tem um termo técnico ou uma palavra definitiva que tem que bater
+    com essa causa, coloque ela aqui.
+  </p>
+
+
+  <h4>5. DETALHES / SOLUÇÃO <small>(opcional)</small></h4>
+
+  <p>
+    <strong>Peso na Dedução: 0 (Zero)</strong>
+  </p>
+
+  <p>
+    <strong>O que ele é:</strong> É o <strong>Prêmio / O Tesouro</strong>.
+  </p>
+
+  <p>
+    <strong>Como funciona:</strong> Este campo fica totalmente isolado,
+    trancado em um cofre. O Oráculo <strong>não lê os detalhes na hora de
+    pesquisar</strong>.
+  </p>
+
+  <p>
+    Por quê? Porque se você escrever
+    <strong>"Trocar o fusível de 15 amperes"</strong> na solução, e um dia
+    pesquisar <strong>"fusível"</strong>, o Oráculo não deve sugerir essa causa,
+    pois fusível é a <strong>solução, e não o sintoma</strong>!
+  </p>
+
+  <p>
+    Ele só revela esse texto quando você clica em
+    <strong>"Ver detalhes"</strong> ou no ícone do olhinho.
+  </p>
+
+
+  <h4>🧠 O BÔNUS OCULTO: APRENDIZADO</h4>
+
+  <p>
+    Lembra do botão 👍 <strong>(O Oráculo Acertou?)</strong>
+  </p>
+
+  <p>
+    Quando você usa ele, o sistema cria um
+    <strong>"6º campo" invisível</strong> dentro do registro chamado
+    <strong>termosAprendidos</strong>.
+  </p>
+
+  <p>
+    Esse campo invisível recebe um <strong>multiplicador brutal de peso</strong>
+    (aquele que você controla no slider de <strong>0 a 10x</strong>).
+  </p>
+
+  <p>
+    Ele entra rasgando na matemática para garantir que, da próxima vez que
+    você digitar aquela busca, a causa <strong>pule para o topo</strong>
+    na mesma hora!
+  </p>
+
+
+  <hr>
+
+  <h4>🏆 Resumo da tática de ouro para cadastrar</h4>
+
+  <p>
+    Escreva os <strong>Sintomas</strong> como se estivesse fofocando o problema
+    para um amigo — com detalhes e jeitos diferentes de falar.
+  </p>
+
+  <p>
+    Use as <strong>Palavras-chave</strong> apenas para termos
+    <strong>cirúrgicos e matadores</strong>.
+  </p>
+
+  <p>
+    E guarde as explicações longas de como resolver lá nos
+    <strong>Detalhes</strong>, onde não vão poluir a inteligência!
+  </p>
+
+</div>
       </details>
 
       <details class="config-group ajuda-secao">
