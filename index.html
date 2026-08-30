@@ -150,7 +150,7 @@
     resize:none;
     line-height:1.45;
   }
-  textarea{ min-height:70px; max-height: 70.1px; }
+  textarea{ min-height:20px; max-height: 120.1px; }
   textarea::placeholder, input::placeholder{ color:rgba(36,31,22,0.42); }
   textarea:focus, input:focus{ background:#f4ecd8; }
 
@@ -353,6 +353,7 @@
   .grupo.open .grupo-itens{ display:block; }
 
   .item-linha{
+    flex-direction: column;
     display:flex; align-items:flex-start; gap:10px;
     padding:11px 14px;
     border-bottom:1px solid var(--line);
