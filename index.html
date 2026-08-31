@@ -2555,7 +2555,13 @@ function classificar(query, modelo){
   var tokensBrutosQuery = extrairTokens(query); 
   if (tokensBrutosQuery.size === 0 || modelo.numClasses === 0) return [];
 
-  // A MÁGICA FUZZY: Verifica erros de digitação antes de iniciar o julgamento
+  // === MÁGICA VISUAL: Guarda a ordem original das palavras para montar chips limpos ===
+  var textoProcessado = aplicarSinonimos(normalizar(query, true));
+  var tokensQueryOrdered = textoProcessado.split(' ').map(function(t){ return t.replace(/[\+\-]/g, ''); });
+  var setStopwords = new Set(config.stopwords);
+  var validUnigramsInOrder = tokensQueryOrdered.filter(function(t){ return t.length >= 2 && !setStopwords.has(t); });
+  // =======================================================================
+
   var tokensQuery = new Map();
 
   tokensBrutosQuery.forEach(function(pesoBase, tokenOriginal) {
@@ -2636,32 +2642,42 @@ function classificar(query, modelo){
 
     // 3. Fator de Pureza Contextual: Coeficiente de Sobreposição em vez de Jaccard Clássico!
     var totalTermosUnicosQuery = Array.from(tokensComIDF.keys()).filter(t => tokensComIDF.get(t) > 0).length;
-    // O divisor agora é o menor dos dois, protegendo textos gigantes de serem punidos.
+    // O divisor agora é o menor dos dois, protegendo textos gigantes de serem punidos.    
     var divisor = Math.min(totalTermosNaCausa, totalTermosUnicosQuery);
     var jaccardIndex = divisor > 0 ? (termosDaCausaNoQuery / divisor) : 0;
     
-    logScore += (jaccardIndex * config.pesoJaccard);
-    
-    // 3.5 Boost de Aprendizado por Feedback
+    logScore += (jaccardIndex * config.pesoJaccard);    
+    // 3.5 Boost de Aprendizado por Feedback 
     logScore += calcularBoostFeedback(chave, tokensBrutosQuery);
     
-    // 4. Monta a lista visual de "Pistas Confirmadas" (Limpa e Inteligente)
-    var todosConfirmados = Array.from(tokensComIDF.keys())
-      .filter(function(t){ return (cls.contagem.get(t) || 0) > 0 && tokensComIDF.get(t) > 0; });
+    // 4. Monta a lista visual de "Pistas Confirmadas" (Reconstrução Natural da Frase)
+    var palavrasConfirmadas = new Set();
+    tokensComIDF.forEach(function(pesoQuery, token){
+        if ((cls.contagem.get(token) || 0) > 0 && pesoQuery > 0) {
+            token.split('_').forEach(function(w){ palavrasConfirmadas.add(w); });
+        }
+    });
 
-    var bigramasConfirmados = todosConfirmados.filter(function(t) { return t.indexOf('_') !== -1; });
+    var chips = [];
+    var fraseAtual = [];
     
-    var termosCombinados = todosConfirmados.filter(function(t) {
-        if (t.indexOf('_') !== -1) return true; // Mostra todos os pares (bigramas)
-        
-        // Se for palavra solta, só mostra visualmente se ela NÃO estiver dentro de um par
-        var engolidaPorBigrama = bigramasConfirmados.some(function(b) {
-            var partes = b.split('_');
-            return partes.includes(t);
-        });
-        
-        return !engolidaPorBigrama; // Esconde a palavra solta se ela já faz parte de um par exibido
-    }).sort(function(a,b){ return tokensComIDF.get(b) - tokensComIDF.get(a); });
+    // Junta as palavras validadas mantendo a ordem exata em que você digitou
+    validUnigramsInOrder.forEach(function(w) {
+        if (palavrasConfirmadas.has(w)) {
+            fraseAtual.push(w);
+        } else {
+            if (fraseAtual.length > 0) {
+                chips.push(fraseAtual.join(' '));
+                fraseAtual = [];
+            }
+        }
+    });
+    if (fraseAtual.length > 0) {
+        chips.push(fraseAtual.join(' '));
+    }
+
+    // Remove as duplicações visuais
+    var termosCombinados = Array.from(new Set(chips)).sort(function(a,b){ return b.length - a.length; });
 
     resultadosBrutos.push({
       nome: cls.nome,
@@ -2676,9 +2692,7 @@ function classificar(query, modelo){
 
   if (resultadosBrutos.length === 0) return [];
 
-// 5. Softmax (Transforma em porcentagem com Controle de Temperatura)
-  var temp = config.temperaturaSoftmax || 1.0; // Puxa o valor do painel
-  
+  var temp = config.temperaturaSoftmax || 1.0; 
   var maxLog = Math.max.apply(null, resultadosBrutos.map(function(r){ return r.logScore; }));
   var exps = resultadosBrutos.map(function(r){ return Math.exp((r.logScore - maxLog) / temp); });
   var soma = exps.reduce(function(a,b){ return a+b; }, 0);
@@ -2885,9 +2899,11 @@ function tierDe(pct){
    ========================================================= */
 function analisarPistasVisuais(textoOriginal, resultadoPrincipal){
   var termosPrincipais = new Set();
+  
   if (resultadoPrincipal && resultadoPrincipal.termos) {
     resultadoPrincipal.termos.forEach(function(t){
-      t.split('_').forEach(function(parte){ if (parte) termosPrincipais.add(parte); });
+      // Agora divide tanto por espaço quanto por underline para pegar as palavras raízes
+      t.split(/[\s_]+/).forEach(function(parte){ if (parte) termosPrincipais.add(parte); });
     });
   }
 
@@ -2912,7 +2928,6 @@ function analisarPistasVisuais(textoOriginal, resultadoPrincipal){
     return { texto: pedaco, tipo: tipo };
   });
 }
-
 function renderPistasVisuaisHtml(pedacos, textoStats){
   var partes = pedacos.map(function(p){
     if (p.tipo === 'espaco') return p.texto;
