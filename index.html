@@ -2645,10 +2645,23 @@ function classificar(query, modelo){
     // 3.5 Boost de Aprendizado por Feedback
     logScore += calcularBoostFeedback(chave, tokensBrutosQuery);
     
-    // 4. Monta a lista visual
-    var termosCombinados = Array.from(tokensComIDF.keys())
-      .filter(function(t){ return (cls.contagem.get(t) || 0) > 0 && tokensComIDF.get(t) > 0; })
-      .sort(function(a,b){ return tokensComIDF.get(b) - tokensComIDF.get(a); });
+    // 4. Monta a lista visual de "Pistas Confirmadas" (Limpa e Inteligente)
+    var todosConfirmados = Array.from(tokensComIDF.keys())
+      .filter(function(t){ return (cls.contagem.get(t) || 0) > 0 && tokensComIDF.get(t) > 0; });
+
+    var bigramasConfirmados = todosConfirmados.filter(function(t) { return t.indexOf('_') !== -1; });
+    
+    var termosCombinados = todosConfirmados.filter(function(t) {
+        if (t.indexOf('_') !== -1) return true; // Mostra todos os pares (bigramas)
+        
+        // Se for palavra solta, só mostra visualmente se ela NÃO estiver dentro de um par
+        var engolidaPorBigrama = bigramasConfirmados.some(function(b) {
+            var partes = b.split('_');
+            return partes.includes(t);
+        });
+        
+        return !engolidaPorBigrama; // Esconde a palavra solta se ela já faz parte de um par exibido
+    }).sort(function(a,b){ return tokensComIDF.get(b) - tokensComIDF.get(a); });
 
     resultadosBrutos.push({
       nome: cls.nome,
