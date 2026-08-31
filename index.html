@@ -1250,14 +1250,15 @@
     <!-- NOVA BARRA DE FERRAMENTAS: Limpar e Colar -->
     <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 6px;">
         <label class="field-label" style="margin:0;">CONTEÚDO DO REGISTRO</label>
-        <div style="display:flex; gap:12px;">
-            <button id="btnLimparAdicao" class="btn-link" style="font-size:0.8rem; color:var(--danger); padding:0;" aria-label="Apagar Molde">🧹 Limpar</button>
-            <button id="btnColarAdicao" class="btn-link" style="font-size:0.8rem; padding:0;" aria-label="Colar da Área de Transferência">📋 Colar</button>
-        </div>
+        
     </div>
     
     <textarea id="inputAdicaoRapida" placeholder="Cole seu texto aqui..." style="width:100%; min-height: 365px; height: 35vh; resize: vertical; box-sizing:border-box; margin-bottom:15px; font-family:inherit; padding:10px; font-size:0.9rem; line-height:1.4; border:1px solid rgba(0,0,0,0.1); border-radius:8px;"></textarea>
     
+        <div style="display:flex; gap:12px;margin-bottom: 25px;">
+            <button id="btnLimparAdicao" class="btn-link" style="font-size:0.8rem; color:var(--danger); padding:0;" aria-label="Apagar Molde">🧹 Limpar</button>
+            <button id="btnColarAdicao" class="btn-link" style="font-size:0.8rem; padding:0;" aria-label="Colar da Área de Transferência">📋 Colar</button>
+        </div>
     <div class="modal-actions">
       <button id="btnCancelAdicaoRapida" class="btn btn-ghost">Cancelar</button>
       <button id="btnConfirmAdicaoRapida" class="btn btn-stamp">Salvar no Arquivo</button>
