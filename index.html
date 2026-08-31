@@ -843,6 +843,10 @@
         <button id="btnAjuda" class="icon-btn" aria-label="Ajuda / Como usar" style="background:rgba(0,0,0,0.06); color: #ffb91c; border-radius:8px; padding: 6px; transition: 0.3s;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </button>
+        <!-- NOVO: Botão Adição Rápida -->
+        <button id="btnAdicaoRapida" class="icon-btn" aria-label="Adição Rápida" title="Adição Rápida" style="background:rgba(0,0,0,0.06); color:#28a745; border-radius:8px; padding: 6px; transition: 0.3s; margin-left: 4px; margin-right: 4px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </button>
       </div>
 
       <span class="case-no" style="margin: 0; font-size: 0.75rem; background: rgba(0,0,0,0.05); padding: 4px 8px; border-radius: 12px; font-weight: bold;">
@@ -1231,6 +1235,36 @@
     </div>
   </div>
 </div>
+<!-- Modal de Adição Rápida -->
+<div id="modalAdicaoRapidaOverlay" class="modal-overlay hidden">
+  <div class="modal" style="max-width: 640px; width: 98%;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <h3 style="margin:0; font-size:1.1rem; color:var(--primary);">⚡ Adição Rápida</h3>
+        <button id="btnFecharXAdicaoRapida" class="btn-link" style="color:var(--danger); font-size:1.2rem; padding:0; line-height:1;">&times;</button>
+    </div>
+    
+    <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px; line-height:1.4;">
+      Preencha os campos do molde abaixo, <strong>OU</strong> limpe tudo e cole um texto bruto para salvar como causa "indefinida" e organizar depois.
+    </p>
+
+    <!-- NOVA BARRA DE FERRAMENTAS: Limpar e Colar -->
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 6px;">
+        <label class="field-label" style="margin:0;">CONTEÚDO DO REGISTRO</label>
+        <div style="display:flex; gap:12px;">
+            <button id="btnLimparAdicao" class="btn-link" style="font-size:0.8rem; color:var(--danger); padding:0;" aria-label="Apagar Molde">🧹 Limpar</button>
+            <button id="btnColarAdicao" class="btn-link" style="font-size:0.8rem; padding:0;" aria-label="Colar da Área de Transferência">📋 Colar</button>
+        </div>
+    </div>
+    
+    <textarea id="inputAdicaoRapida" placeholder="Cole seu texto aqui..." style="width:100%; min-height: 365px; height: 35vh; resize: vertical; box-sizing:border-box; margin-bottom:15px; font-family:inherit; padding:10px; font-size:0.9rem; line-height:1.4; border:1px solid rgba(0,0,0,0.1); border-radius:8px;"></textarea>
+    
+    <div class="modal-actions">
+      <button id="btnCancelAdicaoRapida" class="btn btn-ghost">Cancelar</button>
+      <button id="btnConfirmAdicaoRapida" class="btn btn-stamp">Salvar no Arquivo</button>
+    </div>
+  </div>
+</div>
+
 <div id="modalExportOverlay" class="modal-overlay hidden">
   <div class="modal">
     <h3 style="margin-top:0; margin-bottom:15px; font-size:1.1rem; color:var(--primary);">Exportar Cartucho</h3>
@@ -4097,6 +4131,164 @@ function refreshAll(){
     }
   });
 }
+/* =========================================================
+   Adição Rápida (Smart Parser)
+   ========================================================= */
+
+// O cérebro que lê o texto e distribui nas caixinhas
+function processarAdicaoRapida(textoOriginal) {
+    var txt = textoOriginal.trim();
+    if (!txt) return null;
+
+    // Procura se você usou algum dos rótulos mágicos
+    var temMarcador = /NOME DA CAUSA:|CATEGORIA:|SITUAÇÃO \/ SINAIS OBSERVADOS:|PALAVRAS-CHAVE:|DETALHES \/ SOLUÇÃO:/i.test(txt);
+
+    var resultado = {
+        causa: "indefinida",
+        categoria: "indefinida",
+        sintomas: "",
+        tags: [],
+        detalhes: ""
+    };
+
+    // Se você colou um texto bruto sem rótulos, joga tudo em Sintomas e volta "indefinido"
+    if (!temMarcador) {
+        resultado.sintomas = txt;
+        return resultado;
+    }
+
+    var parsed = { causa:'', categoria:'', sintomas:'', tags:'', detalhes:'' };
+    var campoAtual = 'sintomas'; // Se houver lixo no começo, vai para sintomas
+
+    var linhas = txt.split('\n');
+    linhas.forEach(function(linha) {
+        var upper = linha.trim().toUpperCase();
+        if (upper.startsWith('NOME DA CAUSA:')) {
+            campoAtual = 'causa';
+            parsed.causa += linha.substring(14).trim() + '\n';
+        } else if (upper.startsWith('CATEGORIA:')) {
+            campoAtual = 'categoria';
+            parsed.categoria += linha.substring(10).trim() + '\n';
+        } else if (upper.startsWith('SITUAÇÃO / SINAIS OBSERVADOS:')) {
+            campoAtual = 'sintomas';
+            parsed.sintomas += linha.substring(29).trim() + '\n';
+        } else if (upper.startsWith('PALAVRAS-CHAVE:')) {
+            campoAtual = 'tags';
+            parsed.tags += linha.substring(15).trim() + '\n';
+        } else if (upper.startsWith('DETALHES / SOLUÇÃO:')) {
+            campoAtual = 'detalhes';
+            parsed.detalhes += linha.substring(19).trim() + '\n';
+        } else {
+            // Se não for um rótulo, continua anexando no campo em que estava
+            parsed[campoAtual] += linha + '\n';
+        }
+    });
+
+    // Limpa e aplica os resultados encontrados
+    if(parsed.causa.trim()) resultado.causa = parsed.causa.trim();
+    if(parsed.categoria.trim()) resultado.categoria = parsed.categoria.trim();
+    if(parsed.sintomas.trim()) resultado.sintomas = parsed.sintomas.trim();
+    if(parsed.tags.trim()) resultado.tags = parsed.tags.split(',').map(function(t){ return t.trim(); }).filter(Boolean);
+    if(parsed.detalhes.trim()) resultado.detalhes = parsed.detalhes.trim();
+
+    return resultado;
+}
+// O Molde (Template) que já vem escrito
+var templateAdicao = "NOME DA CAUSA: \nCATEGORIA: \nSITUAÇÃO / SINAIS OBSERVADOS: \n\nPALAVRAS-CHAVE: \nDETALHES / SOLUÇÃO: \n";
+// Controla o botão de abrir e fechar a janela
+$('btnAdicaoRapida').addEventListener('click', function(){
+    $('modalAdicaoRapidaOverlay').classList.remove('hidden');
+    
+    // NOVO: Já preenche a caixa com o texto mágico e foca logo após o "NOME DA CAUSA: "
+    var input = $('inputAdicaoRapida');
+    input.value = templateAdicao;
+    
+    setTimeout(function(){ 
+        input.focus(); 
+        input.setSelectionRange(15, 15); // Coloca o cursor pronto para digitar o nome
+    }, 100);
+});
+
+function fecharAdicaoRapida(){
+    $('modalAdicaoRapidaOverlay').classList.add('hidden');
+}
+
+$('btnCancelAdicaoRapida').addEventListener('click', fecharAdicaoRapida);
+$('btnFecharXAdicaoRapida').addEventListener('click', fecharAdicaoRapida);
+$('modalAdicaoRapidaOverlay').addEventListener('click', function(e){
+    if (e.target === this) fecharAdicaoRapida();
+});
+
+// NOVO: Botão Limpar (Joga o molde fora)
+$('btnLimparAdicao').addEventListener('click', function(e){
+    e.preventDefault();
+    $('inputAdicaoRapida').value = '';
+    $('inputAdicaoRapida').focus();
+    toast('Caixa limpa. Pronta para texto bruto.');
+});
+
+// NOVO: Botão Colar Automático
+$('btnColarAdicao').addEventListener('click', function(e){
+    e.preventDefault();
+    
+    // O navegador exige que o site seja seguro (ou localhost) para acessar a área de transferência
+    if (navigator.clipboard && navigator.clipboard.readText) {
+        navigator.clipboard.readText().then(function(texto){
+            if (!texto) { toast('A área de transferência está vazia.'); return; }
+            
+            var input = $('inputAdicaoRapida');
+            var inicio = input.selectionStart;
+            var fim = input.selectionEnd;
+            var val = input.value;
+            
+            // Insere o texto colado exatamente onde o cursor estava piscando
+            input.value = val.substring(0, inicio) + texto + val.substring(fim);
+            
+            // Move o cursor para o final do texto colado
+            input.selectionStart = input.selectionEnd = inicio + texto.length;
+            input.focus();
+            
+            toast('Texto colado com sucesso!');
+        }).catch(function(err){
+            toast('Permissão negada. Segure o dedo na caixa e use o Colar do celular.');
+        });
+    } else {
+        toast('Seu navegador bloqueia a leitura. Segure na caixa para colar manualmente.');
+    }
+});
+// Ação de Salvar direto para o Banco de Dados
+$('btnConfirmAdicaoRapida').addEventListener('click', function(){
+    var txt = $('inputAdicaoRapida').value;
+    
+    // Se o usuário clicar em salvar e só tiver o molde vazio, nós barramos
+    if (!txt || txt.trim() === templateAdicao.trim()) {
+        toast('Cole ou digite algum conteúdo antes de salvar.');
+        return;
+    }
+
+    var obj = processarAdicaoRapida(txt);
+    
+    var caso = {
+        causa: obj.causa,
+        categoria: obj.categoria,
+        sintomas: obj.sintomas,
+        tags: obj.tags,
+        detalhes: obj.detalhes,
+        criadoEm: Date.now(),
+        votosPositivos: 0,
+        votosNegativos: 0,
+        termosAprendidos: []
+    };
+
+    addCaso(caso).then(function(){
+        toast('Registro rápido arquivado com sucesso!');
+        fecharAdicaoRapida();
+        $('inputAdicaoRapida').value = '';
+        return refreshAll();
+    }).catch(function(err){
+        toast('Erro ao salvar adição rápida: ' + err);
+    });
+});
 /* =========================================================
    Inicialização
    ========================================================= */
