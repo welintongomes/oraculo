@@ -2732,7 +2732,12 @@ function corDaCategoria(nome){
 function badgeCategoriaHtml(nome){
   var cor = corDaCategoria(nome);
   if (!cor) return '';
-  return '<span class="badge-categoria" style="background:' + cor.bg + ';color:' + cor.fg + ';border-color:' + cor.bd + ';">' + escapeHtml(nome) + '</span>';
+  
+  // A MÁGICA DA SOMBRA (Stroke + Drop Shadow):
+  // Cria uma bordinha preta ao redor de cada letra e uma pequena sombra embaixo
+  var sombraPreta = "text-shadow: -1px -1px 1px rgba(0,0,0,0.5), 1px -1px 1px rgba(0,0,0,0.5), -1px 1px 1px rgba(0,0,0,0.5), 1px 1px 1px rgba(0,0,0,0.5), 0px 2px 4px rgba(0,0,0,0.8);";
+  
+  return '<span class="badge-categoria" style="background:' + cor.bg + '; color:' + cor.fg + '; border-color:' + cor.bd + '; ' + sombraPreta + '">' + escapeHtml(nome) + '</span>';
 }
 
 /* =========================================================
@@ -2916,7 +2921,7 @@ function renderPistasVisuaisHtml(pedacos, textoStats){
 
   return (
     // BARRA COMPACTA
-    '<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.04); margin-top: 12px;padding:0px 15px; border-radius:8px; margin-bottom:12px;">' +
+    '<div style="display:flex; justify-content:space-between; align-items:center; flex-direction: row-reverse; background:rgba(0,0,0,0.04); margin-top: 12px;padding:0px 15px; border-radius:8px; margin-bottom:12px;">' +
       '<div style="font-size:0.85rem; display:flex; align-items:center; gap:8px;">' +
         '<strong style="color:var(--primary); margin:0;">VEREDICTO</strong>' +
         '<span style="color:var(--text-muted); font-size:0.75rem; border-left:1px solid rgba(0,0,0,0.1); padding-left:8px;" id="statsOraculoTexto">' + textoStats + '</span>' +
