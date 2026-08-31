@@ -107,6 +107,8 @@
   @keyframes fadein{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
 
   .card{
+    overflow-y: auto;
+    max-height: 520px;
     background:var(--paper);
     color:var(--ink);
     border-radius:var(--radius-card);
@@ -866,7 +868,7 @@
       <div class="card">
         <div class="card-body">
           <label class="field-label" for="queryInput">DESCREVA OS FATOS</label>
-          <textarea id="queryInput" placeholder="Ex.: o carro não liga, dou a partida e só ouço um clique, os faróis estavam fracos hoje de manhã..."></textarea>
+          <textarea id="queryInput" placeholder="Ex.: o carro não liga, dou a partida e só ouço um clique, os faróis estavam fracos hoje de manhã..." style="margin-bottom: 20px;" ></textarea>
           
           <div class="dedu">
             <button id="btnConsultar" class="btn-stamp" style="flex:1; margin:0;">Deduzir</button>
@@ -905,6 +907,9 @@
           <label class="field-label" for="inputCausa">NOME DA CAUSA*</label>
           <input type="text" id="inputCausa" list="listaCausas" placeholder="Ex.: Bateria do carro fraca">
           <datalist id="listaCausas"></datalist>
+          
+          <!-- NOVO: Aviso de preenchimento inteligente -->
+          <div id="avisoCausaExistente" style="display:none; font-size:0.75rem; color:#9c27b0; font-weight:bold; margin-top: 10px; margin-bottom:15px;"></div>
 
           <label class="field-label" for="inputCategoria">CATEGORIA <span class="opt">(opcional)</span></label>
           <input type="text" id="inputCategoria" list="listaCategorias" placeholder="Ex.: Carro, Saúde, Casa...">
@@ -3298,14 +3303,66 @@ function escapeHtml(s){
 }
 
 /* =========================================================
-   Novo registro / edição
+   Novo registro / edição (Com Auto-Ocultação Inteligente)
    ========================================================= */
+
+function atualizarVisibilidadeCamposNovo() {
+  var labelCat = document.querySelector('label[for="inputCategoria"]');
+  var inputCat = $('inputCategoria');
+  var labelDet = document.querySelector('label[for="inputDetalhes"]');
+  var inputDet = $('inputDetalhes');
+  var avisoAuto = $('avisoCausaExistente');
+
+  if (editandoId !== null) {
+    if (labelCat) labelCat.style.display = 'block';
+    if (inputCat) inputCat.style.display = 'block';
+    if (labelDet) labelDet.style.display = 'block';
+    if (inputDet) inputDet.style.display = 'block';
+    if (avisoAuto) avisoAuto.style.display = 'none';
+    return;
+  }
+
+  var nomeDigitado = $('inputCausa').value.trim();
+  var chaveDigitada = normalizarChaveCausa(nomeDigitado);
+  
+  var casoExistente = null;
+  if (chaveDigitada && todosCasos.length > 0) {
+    casoExistente = todosCasos.find(function(c) {
+      return normalizarChaveCausa(c.causa) === chaveDigitada;
+    });
+  }
+
+  if (casoExistente) {
+    // É uma causa conhecida! Oculta os campos E DEIXA EM BRANCO para não duplicar dados no banco!
+    if (labelCat) labelCat.style.display = 'none';
+    if (inputCat) { inputCat.style.display = 'none'; inputCat.value = ''; }
+    if (labelDet) labelDet.style.display = 'none';
+    if (inputDet) { inputDet.style.display = 'none'; inputDet.value = ''; }
+    
+    // Atualizei a mensagem para refletir a sua ideia de otimização
+    if (avisoAuto) {
+        avisoAuto.style.display = 'block';
+        avisoAuto.textContent = '✨ Causa acima conhecida! isso será um Registro.';
+    }
+  } else {
+    // Causa nova! Mostra todos os campos
+    if (labelCat) labelCat.style.display = 'block';
+    if (inputCat) { inputCat.style.display = 'block'; inputCat.value = ''; }
+    if (labelDet) labelDet.style.display = 'block';
+    if (inputDet) { inputDet.style.display = 'block'; inputDet.value = ''; }
+    if (avisoAuto) avisoAuto.style.display = 'none';
+  }
+}
+// Ouve cada letra que você digita ou item que seleciona no Nome da Causa
+$('inputCausa').addEventListener('input', atualizarVisibilidadeCamposNovo);
+
+
 $('btnSalvarCaso').addEventListener('click', function(){
   var causa = $('inputCausa').value.trim();
-  var categoria = $('inputCategoria').value.trim();
+  var categoria = $('inputCategoria').value.trim(); // Mesmo oculto, ele pega o valor auto-preenchido!
   var sintomas = $('inputSintomas').value.trim();
   var tags = $('inputTags').value.split(',').map(function(t){ return t.trim(); }).filter(Boolean);
-  var detalhes = $('inputDetalhes').value.trim();
+  var detalhes = $('inputDetalhes').value.trim(); // Mesmo oculto, ele pega o valor auto-preenchido!
 
   // Captura os termos aprendidos via Feedback (se existirem)
   var termosInput = $('inputTermosAprendidos') ? $('inputTermosAprendidos').value : '';
@@ -3343,6 +3400,7 @@ $('btnSalvarCaso').addEventListener('click', function(){
     if($('inputTermosAprendidos')) $('inputTermosAprendidos').value = '';
     autoResize($('inputSintomas'));
     autoResize($('inputDetalhes'));
+    setTimeout(atualizarVisibilidadeCamposNovo, 50); // Garante que a tela volte ao padrão limpo
     return refreshAll();
   }).catch(function(err){
     toast('Erro ao salvar: ' + err);
@@ -3367,12 +3425,15 @@ function iniciarEdicao(caso){
   mudarAba('novo');
   autoResize($('inputSintomas'));
   autoResize($('inputDetalhes'));
+  
+  atualizarVisibilidadeCamposNovo(); // Força mostrar tudo na edição
 }
 
 function cancelarEdicaoUI(){
   editandoId = null;
   $('editBanner').classList.add('hidden');
   if ($('grupoTermosAprendidos')) $('grupoTermosAprendidos').style.display = 'none';
+  setTimeout(atualizarVisibilidadeCamposNovo, 50); // Restaura o formulário para o modo normal
 }
 
 $('cancelarEdicao').addEventListener('click', function(){
@@ -3384,7 +3445,6 @@ $('cancelarEdicao').addEventListener('click', function(){
   $('inputDetalhes').value = '';
   if($('inputTermosAprendidos')) $('inputTermosAprendidos').value = '';
 });
-
 /* =========================================================
    Arquivo (listagem / exportação / importação)
    ========================================================= */
@@ -3464,9 +3524,16 @@ function renderizarProximoLote() {
 
   lote.forEach(function(g, indexLote){
     var gi = inicio + indexLote; 
-    var categoriaGrupo = g.categoria;
+    
+    // === NOVA INTELIGÊNCIA DE DESDUPLICAÇÃO ===
+    // O sistema varre o grupo e acha a Categoria e a Solução "Mestre" (a que não está vazia)
+    var categoriaGrupo = '';
+    var solucaoGrupo = '';
+    g.itens.forEach(function(it){
+        if (it.categoria && !categoriaGrupo) categoriaGrupo = it.categoria;
+        if (it.detalhes && !solucaoGrupo) solucaoGrupo = it.detalhes;
+    });
 
-    // A memória da voz guarda a categoria para a barreira funcionar
     textosDosCards.arquivo[gi] = { 
         nome: g.nome, 
         itens: g.itens, 
@@ -3491,8 +3558,9 @@ function renderizarProximoLote() {
       var shortText = escapeHtml(textoLimpo.slice(0, 90)) + (isLong ? '…' : '');
       var fullText = escapeHtml(textoLimpo);
       
-      // Prepara o texto da solução
-      var textoSolucao = it.detalhes || 'Nenhuma solução ou detalhe registrado.';
+      // === O OLHINHO INTELIGENTE ===
+      // Se este registro estiver vazio, ele pega emprestado da "Solução Mestre" do grupo!
+      var textoSolucao = it.detalhes || solucaoGrupo || 'Nenhuma solução ou detalhe registrado.';
       var fullSolucao = escapeHtml(textoSolucao);
 
       // A linha ganha flex-wrap:wrap para a solução conseguir pular para a linha de baixo
