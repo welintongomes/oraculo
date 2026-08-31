@@ -421,7 +421,7 @@
     box-shadow:0 8px 20px rgba(0,0,0,0.4);
     opacity:0; pointer-events:none;
     transition:opacity .25s ease, transform .25s ease;
-    z-index:50; max-width:80%; text-align:center;
+    z-index:70; max-width:80%; text-align:center;
   }
   .toast.show{ opacity:1; transform:translate(-50%,0); }
 
@@ -2040,37 +2040,62 @@ $('btnResetIntencoes').addEventListener('click', function(e){
 
 
 // === UI: Stopwords (Balõezinhos) ===
-function renderStopwords() {
+
+// 1. A função agora aceita um "filtro" opcional
+function renderStopwords(filtro) {
   var area = $('areaStopwords');
   area.innerHTML = '';
+  
+  // Transforma o que você está digitando em minúsculo
+  var termo = (filtro || '').trim().toLowerCase();
+
   config.stopwords.forEach(function(sw, index) {
+    // A MÁGICA: Se houver texto no filtro, e a palavra não bater, nós a pulamos!
+    if (termo && sw.toLowerCase().indexOf(termo) === -1) {
+        return; 
+    }
+
     var div = document.createElement('div');
     div.className = 'chip-editavel';
     div.innerHTML = escapeHtml(sw) + ' <button data-idx="'+index+'">&times;</button>';
     area.appendChild(div);
   });
+  
   area.querySelectorAll('button').forEach(function(btn){
     btn.addEventListener('click', function(){
       config.stopwords.splice(btn.getAttribute('data-idx'), 1);
       salvarConfig();
-      renderStopwords();
-      // Chame esta função na inicialização (junto com renderStopwords();)
-      renderGatilhos();
+      // Quando apagar uma palavra, mantém a lista filtrada se você ainda estiver digitando
+      renderStopwords($('inputStopword').value);
+      if (typeof renderGatilhos === 'function') renderGatilhos();
     });
   });
 }
 
 function addStopword() {
   var val = $('inputStopword').value.trim().toLowerCase();
-  if(val && !config.stopwords.includes(val)) {
+  
+  if (!val) return; // Se a caixa estiver vazia, não faz nada
+  
+  if (!config.stopwords.includes(val)) {
     config.stopwords.push(val);
     salvarConfig();
-    renderStopwords();
-    $('inputStopword').value = '';
+    $('inputStopword').value = ''; // Limpa a caixa de texto
+    renderStopwords(); // Restaura a lista para mostrar tudo novamente
+  } else {
+    // AVISO INTELIGENTE: Se a palavra já existir, o sistema te avisa!
+    toast('A palavra "' + val + '" já está na lista.');
   }
 }
+
 $('btnAddStopword').addEventListener('click', addStopword);
 $('inputStopword').addEventListener('keypress', function(e){ if(e.key === 'Enter') addStopword(); });
+
+// === 2. EVENTO DE FILTRO EM TEMPO REAL ===
+// A cada letra que você digita ou apaga, a lista de baixo reage imediatamente!
+$('inputStopword').addEventListener('input', function(e){
+  renderStopwords(e.target.value);
+});
 
 // === UI: Sinônimos ===
 function renderSinonimos() {
