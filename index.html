@@ -948,7 +948,7 @@
         <input type="file" id="inputImportar" accept="application/json" style="display:none;">
       </div>
 
-      <div id="listaArquivo" style="max-height: 47vh; min-height: 46.9vh; padding-bottom: 34px; overflow-y: auto;scrollbar-width: thin;scrollbar-color: rgb(32 27 19) rgba(255, 255, 255, .05);"></div>
+      <div id="listaArquivo" style="max-height: 48.8vh; min-height: 48.7vh; padding-bottom: 34px; overflow-y: auto;scrollbar-width: thin;scrollbar-color: rgb(32 27 19) rgba(255, 255, 255, .05);"></div>
       <div id="estadoVazioArquivo" class="empty-state" style="display:none;">
         <div class="empty-icon">🗂</div>
         <p>Nenhum registro arquivado ainda.<br>Adicione uma causa ou carregue exemplos de demonstração.</p>
@@ -961,7 +961,7 @@
       <select id="filtroCategoriaArquivo" style="flex: 0; min-width: 80px;color: #a89c86; border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; font-family: inherit; font-size: 0.85rem; background: var(--surface);">
           <option value="">Todas as categorias</option>
         </select>
-      <input type="search" id="filtroArquivo" placeholder="Pesquisar..." style="flex: 1; min-width: 120px;">
+      <input type="search" id="filtroArquivo" placeholder="Pesquisar..." style="flex: 1; min-width: 120px;height: 30px; ">
       </div>
       <details class="info-box">
         <summary>Apagar tudo / intender Como funciona a dedução?</summary>
@@ -3417,7 +3417,7 @@ function renderizarProximoLote() {
         '<div class="item-texto ' + (isLong ? 'texto-expansivel' : '') + '" ' + 
              (isLong ? 'style="cursor:pointer;" title="Toque para ler completo"' : '') + '>' +
           '<span class="txt-curto">' + shortText + '</span>' +
-          '<span class="txt-completo" style="display:none;">' + fullText + '</span>' +
+          '<span class="txt-completo" style="display:none;font-size: 0.97rem;">' + fullText + '</span>' +
         '</div>' +
         '<div class="item-acoes">' +
           // NOVO: BOTÃO DO OLHINHO
@@ -3432,7 +3432,7 @@ function renderizarProximoLote() {
           '</button>' +
         '</div>' +
         // NOVO: ÁREA DA SOLUÇÃO (escondida por padrão)
-        '<div class="item-solucao-oculta" style="display:none; width:100%; margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.05); font-size:0.8rem; color:var(--text-muted);">' +
+        '<div class="item-solucao-oculta" style="display:none; width:100%; margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.05); font-size:0.95rem; color:var(--text-muted);">' +
            '<strong>Solução:</strong> ' + fullSolucao +
         '</div>' +
       '</div>';
