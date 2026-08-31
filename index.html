@@ -2689,18 +2689,43 @@ function classificar(query, modelo){
   return resultadosBrutos;
 }
 /* =========================================================
-   Cor por categoria (determinística, sem precisar salvar cor)
+   Cor por categoria (Filtro de Luminância Inteligente)
    ========================================================= */
 function corDaCategoria(nome){
   if (!nome) return null;
   var chave = normalizarChaveCausa(nome);
   var hash = 0;
   for (var i = 0; i < chave.length; i++){ hash = (hash * 31 + chave.charCodeAt(i)) >>> 0; }
+  
   var hue = hash % 360;
+  
+  // MÁGICA DA LUMINÂNCIA (UX):
+  // O olho humano percebe o brilho das cores de forma diferente. 
+  var s = 70;   // Saturação padrão
+  var lFg = 75; // Luz do Texto (Padrão para a maioria das cores)
+  var lBg = 45; // Luz do Fundo (Padrão para a maioria das cores)
+
+  // Zona 1: Amarelos e Verdes Limão (São cores naturalmente muito brilhantes)
+  if (hue >= 40 && hue <= 110) {
+      lFg = 45; // Escurecemos o texto para dar leitura
+      lBg = 35; // Escurecemos a base do fundo
+      s = 85;   // Aumentamos a saturação para a cor não ficar suja
+  } 
+  // Zona 2: Cianos e Azuis Claros (Azul bebê, etc)
+  else if (hue >= 170 && hue <= 200) {
+      lFg = 55; // Escurecemos o texto levemente
+      lBg = 40; 
+  }
+  // Zona 3: Azuis Escuros, Anil e Roxos (São cores naturalmente fechadas)
+  else if (hue >= 230 && hue <= 280) {
+      lFg = 85; // Clareamos bastante o texto para ele "pular" na tela
+      lBg = 55; // Clareamos o fundo para não sumir no escuro
+  }
+
   return {
-    bg: 'hsla(' + hue + ', 55%, 45%, 0.16)',
-    fg: 'hsl(' + hue + ', 65%, 75%)',
-    bd: 'hsla(' + hue + ', 55%, 55%, 0.45)'
+    bg: 'hsla(' + hue + ', ' + s + '%, ' + lBg + '%, 0.16)',
+    fg: 'hsl(' + hue + ', ' + s + '%, ' + lFg + '%)',
+    bd: 'hsla(' + hue + ', ' + s + '%, ' + lBg + '%, 0.45)'
   };
 }
 
