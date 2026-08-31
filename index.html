@@ -857,8 +857,8 @@
 
     </div>
 
-    <p class="app-subtitle" style="margin: 0; font-size: 0.75rem; line-height: 1.3;">
-      Descreva os fatos e descubra as causas mais prováveis.
+    <p class="app-subtitle" style="margin: 0; font-size: 0.93rem; line-height: 1.3;">
+      Descreva fatos, descubra as causas mais prováveis.
     </p>
   </header>
 
@@ -916,7 +916,7 @@
           <datalist id="listaCategorias"></datalist>
 
           <label class="field-label" for="inputSintomas">SITUAÇÃO / SINAIS OBSERVADOS*</label>
-          <textarea id="inputSintomas" placeholder="Descreva com suas palavras o que costuma acontecer quando essa causa está por trás do problema."></textarea>
+          <textarea id="inputSintomas" placeholder="Descreva com suas palavras o que costuma acontecer quando essa causa é suspeita."></textarea>
 
           <label class="field-label" for="inputTags">PALAVRAS-CHAVE <span class="opt">(opcional, separadas por vírgula)</span></label>
           <input type="text" id="inputTags" placeholder="Ex.: bateria, arranque, clique">
@@ -983,7 +983,7 @@
     <section id="tab-config" class="tab-panel">
       
       <p style="font-size:0.85rem; color:var(--text-muted); text-align:center; margin-bottom:15px;">
-        Toque nos painéis abaixo para expandir e ajustar o motor do Oráculo.
+        Toque para expandir e ajustar os motores do Oráculo.
       </p>
       <!-- 2.8 Curiosidade do Oráculo -->
       <details class="config-group">
@@ -1033,7 +1033,7 @@
       
       <details class="config-group">
         <summary>
-          <span>⚖️ Peso do Feedback (Votos)</span>
+          <span>⚖️ Peso do Feedback (👍👎)</span>
           <div style="display:flex; gap:12px; align-items:center;">
             <button id="btnResetVotos" class="btn-link" style="color:var(--danger); font-size:0.75rem; padding:0;">Restaurar</button>
             <span class="seta">▼</span>
@@ -1732,6 +1732,7 @@ var configPadrao = {
   ativarFuzzy: true, // <-- NOVO CONTROLE FUZZY
   velocidadeLeitura: 1.1, // <-- NOVO VELOCIDADE ÁUDIO
   // NOVOS: Configurações do Locutor
+  vozResPorcentagem: true,
   vozResDetalhes: false, 
   vozResSintomas: false,
   vozArqSintomas: false,
@@ -1884,27 +1885,8 @@ $('checkFuzzy').addEventListener('change', function(e){
   salvarConfig();
   toast(config.ativarFuzzy ? 'Corretor Fuzzy ativado.' : 'Corretor Fuzzy desativado.');
 });
-// === UI: Velocidade de Leitura (Voz) ===
-$('rangeVelocidade').value = config.velocidadeLeitura;
-$('valVelocidadeLeitura').textContent = config.velocidadeLeitura.toFixed(1) + 'x';
-$('rangeVelocidade').addEventListener('input', function(e){
-  config.velocidadeLeitura = parseFloat(e.target.value);
-  $('valVelocidadeLeitura').textContent = config.velocidadeLeitura.toFixed(1) + 'x';
-  salvarConfig();
-});
 
-$('btnResetVoz').addEventListener('click', function(e){
-  e.stopPropagation();
-  confirmar('Restaurar a velocidade de leitura para o padrão?').then(function(ok){
-    if(ok) {
-      config.velocidadeLeitura = configPadrao.velocidadeLeitura;
-      salvarConfig();
-      $('rangeVelocidade').value = config.velocidadeLeitura;
-      $('valVelocidadeLeitura').textContent = config.velocidadeLeitura.toFixed(1) + 'x';
-      toast('Velocidade de leitura restaurada.');
-    }
-  });
-});
+
 // === UI: Curiosidade do Oráculo (Perguntas) ===
 $('rangeLimiarDuvida').value = config.limiarDuvida;
 $('valLimiarDuvida').textContent = config.limiarDuvida;
@@ -2175,6 +2157,10 @@ $('btnRestaurarConfig').addEventListener('click', function(){
       $('valVelocidadeLeitura').textContent = config.velocidadeLeitura.toFixed(1) + 'x';
       $('rangeLimiarCobertura').value = config.limiarCobertura;
       $('valLimiarCobertura').textContent = config.limiarCobertura;
+      $('rangeLimiarDuvida').value = config.limiarDuvida;          // adicionar
+      $('valLimiarDuvida').textContent = config.limiarDuvida;      // adicionar
+      $('rangeAprendizado').value = config.pesoAprendizado;         // adicionar
+      $('valPesoAprendizado').textContent = config.pesoAprendizado; // adicionar
       $('checkVozResPorcentagem').checked = config.vozResPorcentagem;
       $('checkVozResDetalhes').checked = config.vozResDetalhes;
       $('checkVozResSintomas').checked = config.vozResSintomas;
@@ -2186,6 +2172,7 @@ $('btnRestaurarConfig').addEventListener('click', function(){
       
       renderStopwords();
       renderSinonimos();
+      renderGatilhos();
       toast('Ajustes restaurados.');
     }
   });
@@ -2350,6 +2337,7 @@ $('inputImportarConfig').addEventListener('change', function(e){
 // Inicializar UI de configurações
 renderStopwords();
 renderSinonimos();
+renderGatilhos();
 /* =========================================================
    Processamento de texto — normalização, stopwords, bigramas
    ========================================================= */
